@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../models/routine.dart';
 import '../services/data_provider.dart';
+import '../theme/app_theme.dart';
 import '../widgets/neuro_button.dart';
 
 class RoutineDetailScreen extends StatefulWidget {
@@ -135,9 +135,10 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     if (_isCompleted) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: theme.colorScheme.background,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -147,18 +148,16 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                 const Spacer(),
                 Text(
                   'Rotina Concluída',
-                  style: GoogleFonts.inter(
-                    fontSize: 32,
+                  style: theme.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Excelente! Você finalizou mais uma etapa do seu foco.',
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    color: Colors.white70,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: AppTheme.mutedText,
                   ),
                 ),
                 const Spacer(),
@@ -176,7 +175,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
     final currentStep = _steps[_currentStepIndex];
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: theme.colorScheme.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -187,16 +186,15 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       widget.routine.title,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
+                      style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.white70,
+                        color: AppTheme.mutedText,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -207,19 +205,17 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
               const SizedBox(height: 24),
               Text(
                 'Passo ${_currentStepIndex + 1} de ${_steps.length}',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
+                style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
-                  color: Colors.white54,
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 currentStep,
-                style: GoogleFonts.inter(
-                  fontSize: 32,
+                style: theme.textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 32),
@@ -227,10 +223,9 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                 Center(
                   child: Text(
                     _formatDuration(_remainingTime!),
-                    style: GoogleFonts.inter(
-                      fontSize: 48,
+                    style: theme.textTheme.displayMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -245,8 +240,11 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                       child: OutlinedButton(
                         onPressed: _hasSteps ? _advanceStep : null,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white54, width: 1.5),
+                          foregroundColor: theme.colorScheme.onSurface,
+                          side: BorderSide(
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                            width: 1.5,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),

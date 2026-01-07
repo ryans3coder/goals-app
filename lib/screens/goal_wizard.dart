@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../models/goal.dart';
 import '../models/milestone.dart';
 import '../services/data_provider.dart';
+import '../theme/app_theme.dart';
 
 class GoalWizard extends StatefulWidget {
   const GoalWizard({super.key});
@@ -107,6 +107,7 @@ class _GoalWizardState extends State<GoalWizard> {
   }
 
   List<Step> _buildSteps() {
+    final theme = Theme.of(context);
     return [
       Step(
         title: const Text('Defina a Meta'),
@@ -124,8 +125,7 @@ class _GoalWizardState extends State<GoalWizard> {
             const SizedBox(height: 16),
             Text(
               'Prazo',
-              style: GoogleFonts.inter(
-                fontSize: 14,
+              style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -135,7 +135,7 @@ class _GoalWizardState extends State<GoalWizard> {
                 Expanded(
                   child: Text(
                     _formatDeadline(_deadline),
-                    style: GoogleFonts.inter(fontSize: 14),
+                    style: theme.textTheme.bodyMedium,
                   ),
                 ),
                 TextButton.icon(
@@ -170,7 +170,9 @@ class _GoalWizardState extends State<GoalWizard> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Nenhuma milestone adicionada.',
-                  style: GoogleFonts.inter(fontSize: 13, color: Colors.white70),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppTheme.mutedText,
+                  ),
                 ),
               ),
             for (int index = 0; index < _milestoneControllers.length; index++)
@@ -216,21 +218,21 @@ class _GoalWizardState extends State<GoalWizard> {
               _titleController.text.trim().isEmpty
                   ? 'Sem título'
                   : _titleController.text.trim(),
-              style: GoogleFonts.inter(
-                fontSize: 18,
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Prazo: ${_formatDeadline(_deadline)}',
-              style: GoogleFonts.inter(fontSize: 14, color: Colors.white70),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppTheme.mutedText,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               'Porquê',
-              style: GoogleFonts.inter(
-                fontSize: 14,
+              style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -239,13 +241,14 @@ class _GoalWizardState extends State<GoalWizard> {
               _reasonController.text.trim().isEmpty
                   ? 'Sem descrição'
                   : _reasonController.text.trim(),
-              style: GoogleFonts.inter(fontSize: 14, color: Colors.white70),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppTheme.mutedText,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               'Milestones',
-              style: GoogleFonts.inter(
-                fontSize: 14,
+              style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -258,9 +261,8 @@ class _GoalWizardState extends State<GoalWizard> {
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
                       '• $title',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: Colors.white70,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.mutedText,
                       ),
                     ),
                   ),
@@ -271,7 +273,9 @@ class _GoalWizardState extends State<GoalWizard> {
                 .isEmpty)
               Text(
                 'Nenhuma milestone definida.',
-                style: GoogleFonts.inter(fontSize: 14, color: Colors.white70),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.mutedText,
+                ),
               ),
           ],
         ),
@@ -281,6 +285,7 @@ class _GoalWizardState extends State<GoalWizard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: EdgeInsets.only(
         left: 16,
@@ -293,8 +298,7 @@ class _GoalWizardState extends State<GoalWizard> {
         children: [
           Text(
             'Adicionar Meta',
-            style: GoogleFonts.inter(
-              fontSize: 20,
+            style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),

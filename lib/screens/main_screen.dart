@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../models/goal.dart';
@@ -8,6 +7,7 @@ import '../models/milestone.dart';
 import '../models/routine.dart';
 import '../services/auth_service.dart';
 import '../services/data_provider.dart';
+import '../theme/app_theme.dart';
 import 'goal_wizard.dart';
 import 'routine_detail_screen.dart';
 import '../widgets/neuro_card.dart';
@@ -37,14 +37,14 @@ class _MainScreenState extends State<MainScreen> {
     final dataProvider = context.read<DataProvider>();
     final titleController = TextEditingController();
     var selectedType = _CreationType.habit;
+    final theme = Theme.of(context);
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: theme.bottomSheetTheme.modalBackgroundColor ??
+          theme.colorScheme.surface,
+      shape: theme.bottomSheetTheme.shape,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -61,8 +61,7 @@ class _MainScreenState extends State<MainScreen> {
                 children: [
                   Text(
                     'Criar novo',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -154,18 +153,19 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _showGoalWizard() {
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor:
+          theme.bottomSheetTheme.modalBackgroundColor ?? theme.cardColor,
+      shape: theme.bottomSheetTheme.shape,
       builder: (context) => const GoalWizard(),
     );
   }
 
   Widget _buildPlaceholder(String label) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(20),
       child: NeuroCard(
@@ -174,17 +174,15 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 24,
+              style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 12),
             Text(
               'Em breve você verá seus dados aqui.',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: Colors.white70,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppTheme.mutedText,
               ),
             ),
           ],
@@ -198,6 +196,7 @@ class _MainScreenState extends State<MainScreen> {
       stream: context.read<DataProvider>().watchHabits(),
       builder: (context, snapshot) {
         final habits = snapshot.data ?? const [];
+        final theme = Theme.of(context);
 
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -225,8 +224,7 @@ class _MainScreenState extends State<MainScreen> {
                     Expanded(
                       child: Text(
                         habit.title,
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
+                        style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -247,17 +245,17 @@ class _MainScreenState extends State<MainScreen> {
                                 horizontal: 16,
                                 vertical: 10,
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                children: const [
-                                  Icon(Icons.check_circle, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Feito'),
-                                ],
-                              ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.success.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.check_circle, size: 18),
+                                SizedBox(width: 8),
+                                Text('Feito'),
+                              ],
+                            ),
                             )
                           : ElevatedButton(
                               key: const ValueKey('check'),
@@ -287,6 +285,7 @@ class _MainScreenState extends State<MainScreen> {
       stream: context.read<DataProvider>().watchRoutines(),
       builder: (context, snapshot) {
         final routines = snapshot.data ?? const [];
+        final theme = Theme.of(context);
 
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -315,8 +314,7 @@ class _MainScreenState extends State<MainScreen> {
                 children: [
                   Text(
                     routine.title,
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -324,9 +322,8 @@ class _MainScreenState extends State<MainScreen> {
                     const SizedBox(height: 8),
                     Text(
                       routine.triggerTime,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: Colors.white70,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppTheme.mutedText,
                       ),
                     ),
                   ],
@@ -344,6 +341,7 @@ class _MainScreenState extends State<MainScreen> {
       stream: context.read<DataProvider>().watchGoals(),
       builder: (context, snapshot) {
         final goals = snapshot.data ?? const [];
+        final theme = Theme.of(context);
 
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -373,17 +371,15 @@ class _MainScreenState extends State<MainScreen> {
                 children: [
                   Text(
                     goal.title,
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     goal.reason.isEmpty ? 'Sem propósito' : goal.reason,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: Colors.white70,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppTheme.mutedText,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -392,16 +388,16 @@ class _MainScreenState extends State<MainScreen> {
                     child: LinearProgressIndicator(
                       value: progress,
                       minHeight: 8,
-                      backgroundColor: Colors.white12,
-                      color: Colors.greenAccent,
+                      backgroundColor:
+                          theme.colorScheme.onSurface.withOpacity(0.12),
+                      color: AppTheme.success,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '$completedMilestones de $totalMilestones milestones concluídas',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: Colors.white70,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppTheme.mutedText,
                     ),
                   ),
                   if (goal.milestones.isNotEmpty) ...[
@@ -442,11 +438,11 @@ class _MainScreenState extends State<MainScreen> {
                             Expanded(
                               child: Text(
                                 milestone.title,
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
+                                style: theme.textTheme.bodyMedium?.copyWith(
                                   color: milestone.isCompleted
-                                      ? Colors.white54
-                                      : Colors.white,
+                                      ? theme.colorScheme.onSurface
+                                          .withOpacity(0.6)
+                                      : theme.colorScheme.onSurface,
                                   decoration: milestone.isCompleted
                                       ? TextDecoration.lineThrough
                                       : TextDecoration.none,

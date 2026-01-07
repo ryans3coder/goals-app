@@ -16,14 +16,15 @@ class NeuroButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF6B1B3A),
-          foregroundColor: Colors.white,
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -35,7 +36,7 @@ class NeuroButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
         ).copyWith(
           overlayColor: MaterialStateProperty.all(
-            Colors.white.withOpacity(0.12),
+            theme.colorScheme.onPrimary.withOpacity(0.12),
           ),
         ),
         child: Padding(
