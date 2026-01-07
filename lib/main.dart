@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
 import 'services/auth_service.dart';
+import 'services/data_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +27,7 @@ class NeuroSyncApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<AuthService>(create: (_) => AuthService()),
+        Provider<DataProvider>(create: (_) => DataProvider()),
         StreamProvider<firebase_auth.User?>(
           create: (context) =>
               context.read<AuthService>().authStateChanges,
