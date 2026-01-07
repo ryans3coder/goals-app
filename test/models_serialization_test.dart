@@ -26,6 +26,22 @@ void main() {
     expect(restored.frequency, habit.frequency);
   });
 
+  test('habit serializes without category', () {
+    final habit = Habit(
+      id: 'habit-2',
+      userId: 'user-2',
+      title: 'Meditar',
+      frequency: const ['daily'],
+      currentStreak: 0,
+      isCompletedToday: false,
+    );
+
+    final restored = Habit.fromMap(habit.toMap());
+
+    expect(restored.id, habit.id);
+    expect(restored.categoryId, isNull);
+  });
+
   test('goal serializes smart fields', () {
     final goal = Goal(
       id: 'goal-1',
