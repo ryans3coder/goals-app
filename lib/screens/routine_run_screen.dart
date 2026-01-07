@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../controllers/routine_run_timer_controller.dart';
 import '../models/habit.dart';
 import '../models/routine.dart';
 import '../models/routine_event.dart';
@@ -26,26 +25,32 @@ class RoutineRunScreen extends StatefulWidget {
 class _RoutineRunScreenState extends State<RoutineRunScreen>
     with WidgetsBindingObserver {
   int _currentStepIndex = 0;
-  bool _isRunning = false;
   bool _isCompleted = false;
   bool _hasStarted = false;
   bool _completionLogged = false;
-  Timer? _timer;
-  Duration? _remainingTime;
   String? _activeStepId;
   final Set<String> _completedStepIds = {};
   final Set<String> _skippedStepIds = {};
+  late final RoutineRunTimerController _timerController;
+  bool _hasAutoStarted = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _timerController = RoutineRunTimerController(
+      onStepCompleted: () {
+        unawaited(_handleStepCompletion(triggeredByTimer: true));
+      },
+    )..addListener(_handleTimerUpdated);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _timer?.cancel();
+    _timerController
+      ..removeListener(_handleTimerUpdated)
+      ..dispose();
     super.dispose();
   }
 
@@ -53,64 +58,40 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
-      if (_isRunning) {
+      if (_timerController.status == RoutineRunTimerStatus.running) {
         _pauseTimer(showSnack: true);
       }
     }
   }
 
   void _pauseTimer({bool showSnack = false}) {
-    _timer?.cancel();
-    if (mounted) {
-      setState(() => _isRunning = false);
-      if (showSnack) {
-        _showSnack(AppStrings.routineRunBackgroundPause);
-      }
+    _timerController.pause();
+    if (showSnack) {
+      _showSnack(AppStrings.routineRunBackgroundPause);
     }
   }
 
-  void _startTimer() {
-    _timer?.cancel();
-    if (_remainingTime == null || _remainingTime!.inSeconds <= 0) {
+  void _handleTimerUpdated() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _ensureRoutineStarted() async {
+    if (_hasStarted) {
       return;
     }
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingTime == null) {
-        timer.cancel();
-        return;
-      }
-      if (_remainingTime!.inSeconds <= 1) {
-        if (mounted) {
-          setState(() => _remainingTime = Duration.zero);
-        }
-        timer.cancel();
-        unawaited(_handleStepCompletion(triggeredByTimer: true));
-        return;
-      }
-      if (mounted) {
-        setState(() {
-          _remainingTime = _remainingTime! - const Duration(seconds: 1);
-        });
-      }
-    });
+    _hasStarted = true;
+    await context.read<DataProvider>().addRoutineEvent(
+          type: RoutineEventType.routineStarted,
+          routineId: widget.routine.id,
+        );
   }
 
-  void _setupTimerForStep(RoutineStep? step) {
-    _timer?.cancel();
-    if (step == null || step.durationSeconds <= 0) {
-      if (mounted) {
-        setState(() => _remainingTime = null);
-      }
-      return;
-    }
-    if (mounted) {
-      setState(() {
-        _remainingTime = Duration(seconds: step.durationSeconds);
-      });
-    }
-  }
-
-  Future<void> _toggleRunning({required bool hasSteps}) async {
+  Future<void> _toggleRunning({
+    required bool hasSteps,
+    required List<RoutineStep> steps,
+  }) async {
     if (!hasSteps) {
       _showSnack(AppStrings.routineRunNoStepsMessage);
       return;
@@ -118,23 +99,19 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
     if (_isCompleted) {
       return;
     }
-    if (_isRunning) {
+    final status = _timerController.status;
+    if (status == RoutineRunTimerStatus.running) {
       _pauseTimer();
       return;
     }
-
-    if (!_hasStarted) {
-      _hasStarted = true;
-      await context.read<DataProvider>().addRoutineEvent(
-            type: RoutineEventType.routineStarted,
-            routineId: widget.routine.id,
-          );
+    if (status == RoutineRunTimerStatus.paused) {
+      await _ensureRoutineStarted();
+      _timerController.resume();
+      return;
     }
-
-    if (mounted) {
-      setState(() => _isRunning = true);
+    if (status == RoutineRunTimerStatus.idle && steps.isNotEmpty) {
+      await _startStepAtIndex(_currentStepIndex, steps);
     }
-    _startTimer();
   }
 
   Future<void> _handleStepCompletion({bool triggeredByTimer = false}) async {
@@ -164,7 +141,7 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
       HapticFeedback.lightImpact();
     }
 
-    await _advanceToNextStep(steps, keepRunning: _isRunning);
+    await _advanceToNextStep(steps);
   }
 
   Future<void> _handleStepSkip() async {
@@ -189,13 +166,10 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
       );
     }
 
-    await _advanceToNextStep(steps, keepRunning: _isRunning);
+    await _advanceToNextStep(steps);
   }
 
-  Future<void> _advanceToNextStep(
-    List<RoutineStep> steps, {
-    required bool keepRunning,
-  }) async {
+  Future<void> _advanceToNextStep(List<RoutineStep> steps) async {
     if (steps.isEmpty) {
       return;
     }
@@ -206,13 +180,22 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
     }
 
     final nextIndex = _currentStepIndex + 1;
+    await _startStepAtIndex(nextIndex, steps);
+  }
+
+  Future<void> _startStepAtIndex(int index, List<RoutineStep> steps) async {
+    if (index < 0 || index >= steps.length) {
+      return;
+    }
+    final step = steps[index];
     if (mounted) {
-      setState(() => _currentStepIndex = nextIndex);
+      setState(() {
+        _currentStepIndex = index;
+        _activeStepId = step.id;
+      });
     }
-    _setupTimerForStep(steps[nextIndex]);
-    if (keepRunning) {
-      _startTimer();
-    }
+    await _ensureRoutineStarted();
+    _timerController.startStep(index, step.durationSeconds);
   }
 
   Future<void> _completeRoutine() async {
@@ -220,10 +203,9 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
       return;
     }
     _completionLogged = true;
-    _timer?.cancel();
+    _timerController.markCompleted();
     if (mounted) {
       setState(() {
-        _isRunning = false;
         _isCompleted = true;
       });
     }
@@ -289,17 +271,17 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
         if (!mounted) {
           return;
         }
-        setState(() => _currentStepIndex = safeIndex);
+        unawaited(_startStepAtIndex(safeIndex, steps));
       });
     }
 
-    if (_activeStepId != currentStep?.id) {
+    if (hasSteps && !_hasAutoStarted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) {
           return;
         }
-        _activeStepId = currentStep?.id;
-        _setupTimerForStep(currentStep);
+        _hasAutoStarted = true;
+        unawaited(_startStepAtIndex(0, steps));
       });
     }
 
@@ -308,8 +290,9 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
         if (!mounted) {
           return;
         }
-        _activeStepId = null;
-        _setupTimerForStep(null);
+        setState(() => _activeStepId = null);
+        _timerController.reset();
+        _hasAutoStarted = false;
       });
     }
 
@@ -372,9 +355,9 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
                 ),
                 child: Center(
                   child: Text(
-                    _remainingTime == null
+                    _timerController.remaining == null
                         ? '--:--'
-                        : _formatDuration(_remainingTime!),
+                        : _formatDuration(_timerController.remaining!),
                     style: theme.textTheme.displayLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: theme.colorScheme.onSurface,
@@ -397,12 +380,15 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
                 )
               else ...[
                 AppPrimaryButton(
-                  label: _isRunning
+                  label: _timerController.status == RoutineRunTimerStatus.running
                       ? AppStrings.routineRunPause
-                      : (_hasStarted
-                          ? AppStrings.routineRunResume
-                          : AppStrings.routineRunStart),
-                  onPressed: hasSteps ? () => _toggleRunning(hasSteps: hasSteps) : null,
+                      : AppStrings.routineRunResume,
+                  onPressed: hasSteps
+                      ? () => _toggleRunning(
+                            hasSteps: hasSteps,
+                            steps: steps,
+                          )
+                      : null,
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Row(
