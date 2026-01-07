@@ -17,6 +17,7 @@ import '../models/habit.dart';
 import '../models/habit_category.dart';
 import '../models/feedback_preferences.dart';
 import '../models/milestone.dart';
+import '../models/backup_snapshot.dart';
 import '../models/routine.dart';
 import '../models/routine_event.dart';
 import '../models/routine_step.dart';
@@ -192,6 +193,105 @@ class DataProvider extends ChangeNotifier {
       routines: _routines.map(_cloneRoutine).toList(),
       goals: _goals.map(_cloneGoal).toList(),
     );
+  }
+
+  Future<BackupSnapshot> buildBackupSnapshot() async {
+    await _ensureLoaded();
+    final routineEvents = await fetchRoutineEvents();
+    return BackupSnapshot(
+      schemaVersion: BackupSnapshot.currentSchemaVersion,
+      timestamp: DateTime.now(),
+      habits: _habits.map(_cloneHabit).toList(),
+      routines: _routines.map(_cloneRoutine).toList(),
+      routineSteps: _routineSteps.map(_cloneRoutineStep).toList(),
+      goals: _goals.map(_cloneGoal).toList(),
+      categories: _categories.map(_cloneCategory).toList(),
+      feedbackPreferences: _feedbackPreferences,
+      routineEvents: routineEvents,
+    );
+  }
+
+  Future<void> restoreFromSnapshot(BackupSnapshot snapshot) async {
+    await _ensureLoaded();
+    await _queuePersist(() async {
+      await _replaceHabits(snapshot.habits);
+      await _replaceRoutines(snapshot.routines);
+      await _replaceGoals(snapshot.goals);
+      await _replaceCategories(snapshot.categories);
+      await _replaceRoutineSteps(snapshot.routineSteps);
+      await _localStore.saveFeedbackPreferences(snapshot.feedbackPreferences);
+      await _localStore.replaceRoutineEvents(snapshot.routineEvents);
+    });
+
+    _habits
+      ..clear()
+      ..addAll(snapshot.habits.map(_cloneHabit));
+    _routines
+      ..clear()
+      ..addAll(snapshot.routines.map(_cloneRoutine));
+    _goals
+      ..clear()
+      ..addAll(snapshot.goals.map(_cloneGoal));
+    _categories
+      ..clear()
+      ..addAll(snapshot.categories.map(_cloneCategory));
+    _routineSteps
+      ..clear()
+      ..addAll(snapshot.routineSteps.map(_cloneRoutineStep));
+    _feedbackPreferences = snapshot.feedbackPreferences;
+
+    _emitAll();
+    notifyListeners();
+  }
+
+  Future<void> _replaceHabits(List<Habit> habits) async {
+    final existing = await _habitUseCases.fetchAll();
+    for (final habit in existing) {
+      await _habitUseCases.deleteById(habit.id);
+    }
+    for (final habit in habits) {
+      await _habitUseCases.upsert(habit);
+    }
+  }
+
+  Future<void> _replaceRoutines(List<Routine> routines) async {
+    final existing = await _routineUseCases.fetchAll();
+    for (final routine in existing) {
+      await _routineUseCases.deleteById(routine.id);
+    }
+    for (final routine in routines) {
+      await _routineUseCases.upsert(routine);
+    }
+  }
+
+  Future<void> _replaceGoals(List<Goal> goals) async {
+    final existing = await _goalUseCases.fetchAll();
+    for (final goal in existing) {
+      await _goalUseCases.deleteById(goal.id);
+    }
+    for (final goal in goals) {
+      await _goalUseCases.upsert(goal);
+    }
+  }
+
+  Future<void> _replaceCategories(List<HabitCategory> categories) async {
+    final existing = await _categoryUseCases.fetchAll();
+    for (final category in existing) {
+      await _categoryUseCases.deleteById(category.id);
+    }
+    for (final category in categories) {
+      await _categoryUseCases.upsert(category);
+    }
+  }
+
+  Future<void> _replaceRoutineSteps(List<RoutineStep> steps) async {
+    final existing = await _routineStepUseCases.fetchAll();
+    for (final step in existing) {
+      await _routineStepUseCases.deleteById(step.id);
+    }
+    if (steps.isNotEmpty) {
+      await _routineStepUseCases.upsertAll(steps);
+    }
   }
 
   Habit _cloneHabit(Habit habit) {

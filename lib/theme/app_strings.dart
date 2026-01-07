@@ -113,4 +113,32 @@ class AppStrings {
   static const String feedbackSoundLabel = 'Som';
   static const String feedbackAnimationsLabel = 'Animações';
   static const String feedbackHapticLabel = 'Vibração';
+  static const String backupTitle = 'Backup e restauração';
+  static const String backupHint =
+      'Faça backup manual e restaure seus dados quando precisar.';
+  static const String backupLoading = 'Carregando backup remoto...';
+  static const String backupInitError =
+      'Não foi possível iniciar o backup agora.';
+  static const String backupLoginStatusTitle = 'Status de login';
+  static const String backupCheckingLogin = 'Verificando login...';
+  static const String backupLoggedOut = 'Você não está conectado.';
+  static const String backupLoggedIn = 'Conectado';
+  static const String backupNoEmail = 'Email não informado';
+  static const String backupLastTitle = 'Último backup';
+  static const String backupNever = 'Nenhum backup local registrado.';
+  static const String backupAtLabel = 'às';
+  static const String backupActionsTitle = 'Ações';
+  static const String backupActionsHint =
+      'O backup online é opcional e só acontece quando você solicita.';
+  static const String backupNowAction = 'Backup agora';
+  static const String restoreAction = 'Restaurar backup';
+  static const String restoreConfirmTitle = 'Restaurar backup?';
+  static const String restoreConfirmMessage =
+      'Essa ação substitui os dados locais pelos do backup remoto.';
+  static const String restoreConfirmAction = 'Restaurar';
+  static const String backupSuccess = 'Backup concluído com sucesso.';
+  static const String restoreSuccess = 'Backup restaurado com sucesso.';
+  static const String backupSignInError =
+      'Não foi possível autenticar agora.';
+  static const String retry = 'Tentar novamente';
 }

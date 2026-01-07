@@ -30,6 +30,7 @@ class LocalDataStore {
   static const _routineHistoryKey = 'local_routine_history';
   static const _routineEventsKey = 'local_routine_events';
   static const _feedbackPreferencesKey = 'feedback_preferences';
+  static const _lastBackupAtKey = 'backup_last_at';
 
   final SharedPreferences? _preferences;
   SharedPreferences? _resolvedPreferences;
@@ -164,6 +165,31 @@ class LocalDataStore {
     await storage.setString(
       _feedbackPreferencesKey,
       jsonEncode(preferences.toMap()),
+    );
+  }
+
+  Future<void> replaceRoutineEvents(List<RoutineEvent> events) async {
+    final preferences = await _getPreferences();
+    await preferences.setString(
+      _routineEventsKey,
+      jsonEncode(events.map((item) => item.toMap()).toList()),
+    );
+  }
+
+  Future<DateTime?> loadLastBackupAt() async {
+    final preferences = await _getPreferences();
+    final raw = preferences.getString(_lastBackupAtKey);
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse(raw);
+  }
+
+  Future<void> saveLastBackupAt(DateTime timestamp) async {
+    final preferences = await _getPreferences();
+    await preferences.setString(
+      _lastBackupAtKey,
+      timestamp.toIso8601String(),
     );
   }
 

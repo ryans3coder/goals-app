@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,10 +8,10 @@ import '../models/habit.dart';
 import '../models/milestone.dart';
 import '../models/routine.dart';
 import '../domain/habits/habit_form_options.dart';
-import '../services/auth_service.dart';
 import '../services/data_provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_strings.dart';
+import 'backup_screen.dart';
 import 'goal_wizard.dart';
 import 'habit_categories_screen.dart';
 import 'habit_form_screen.dart';
@@ -550,92 +549,10 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _buildProfileTab() {
     final theme = Theme.of(context);
-    final user = context.watch<firebase_auth.User?>();
-    final authService = context.read<AuthService>();
     final dataProvider = context.watch<DataProvider>();
     final feedbackPreferences = dataProvider.feedbackPreferences;
 
     final sections = <Widget>[];
-
-    if (user == null) {
-      sections.add(
-        AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Proteja seus dados',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                'Faça login para salvar seu progresso e sincronizar em todos os dispositivos.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textMuted,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.page),
-              AppPrimaryButton(
-                label: AppStrings.signInGoogle,
-                icon: const Icon(Icons.login),
-                onPressed: () async {
-                  try {
-                    await authService.signInWithGoogle();
-                  } on StateError catch (error) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(error.message)),
-                      );
-                    }
-                  } catch (_) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Não foi possível autenticar agora.'),
-                        ),
-                      );
-                    }
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-      );
-    } else {
-      sections.add(
-        AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                user.displayName ?? 'Usuário conectado',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                user.email ?? 'Email não informado',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textMuted,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.page),
-              AppSecondaryButton(
-                label: AppStrings.signOut,
-                icon: const Icon(Icons.logout),
-                onPressed: () async {
-                  await authService.signOut();
-                },
-              ),
-            ],
-          ),
-        ),
-      );
-    }
 
     sections.add(
       AppCard(
@@ -658,6 +575,34 @@ class _MainScreenState extends State<MainScreen> {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const HabitCategoriesScreen(),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    sections.add(
+      AppCard(
+        child: ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            AppStrings.backupTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          subtitle: Text(
+            AppStrings.backupHint,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textMuted,
+            ),
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const BackupScreen(),
               ),
             );
           },
