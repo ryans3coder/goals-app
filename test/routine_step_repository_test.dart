@@ -66,4 +66,37 @@ void main() {
     final refreshed = await repository.fetchByRoutineId('routine-1');
     expect(refreshed.first.durationSeconds, 600);
   });
+
+  test('repository replaces steps by routine id', () async {
+    await repository.upsertAll([
+      RoutineStep(
+        id: 'step-1',
+        routineId: 'routine-1',
+        habitId: 'habit-1',
+        order: 0,
+        durationSeconds: 300,
+      ),
+      RoutineStep(
+        id: 'step-2',
+        routineId: 'routine-1',
+        habitId: 'habit-2',
+        order: 1,
+        durationSeconds: 420,
+      ),
+    ]);
+
+    await repository.replaceByRoutineId('routine-1', [
+      RoutineStep(
+        id: 'step-3',
+        routineId: 'routine-1',
+        habitId: 'habit-3',
+        order: 0,
+        durationSeconds: 180,
+      ),
+    ]);
+
+    final refreshed = await repository.fetchByRoutineId('routine-1');
+    expect(refreshed.length, 1);
+    expect(refreshed.first.id, 'step-3');
+  });
 }

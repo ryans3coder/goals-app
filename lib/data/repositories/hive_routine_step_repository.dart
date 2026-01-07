@@ -23,8 +23,37 @@ class HiveRoutineStepRepository implements RoutineStepRepository {
 
   @override
   Future<void> upsertAll(List<RoutineStep> steps) async {
+    if (steps.isEmpty) {
+      return;
+    }
+    final payload = <String, Map<String, dynamic>>{};
     for (final step in steps) {
-      await _database.routineStepsBox.put(step.id, step.toMap());
+      payload[step.id] = step.toMap();
+    }
+    await _database.routineStepsBox.putAll(payload);
+  }
+
+  @override
+  Future<void> replaceByRoutineId(
+    String routineId,
+    List<RoutineStep> steps,
+  ) async {
+    final box = _database.routineStepsBox;
+    final idsToDelete = box.values
+        .where((item) =>
+            (item['routineId'] as String?)?.toString() == routineId)
+        .map((item) => (item['id'] as String?)?.toString())
+        .whereType<String>()
+        .toList();
+    if (idsToDelete.isNotEmpty) {
+      await box.deleteAll(idsToDelete);
+    }
+    if (steps.isNotEmpty) {
+      final payload = <String, Map<String, dynamic>>{};
+      for (final step in steps) {
+        payload[step.id] = step.toMap();
+      }
+      await box.putAll(payload);
     }
   }
 
