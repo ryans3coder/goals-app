@@ -141,7 +141,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
         backgroundColor: theme.colorScheme.background,
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -153,11 +153,11 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                     color: theme.colorScheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Text(
                   'Excelente! Você finalizou mais uma etapa do seu foco.',
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.mutedText,
+                    color: AppColors.textMuted,
                   ),
                 ),
                 const Spacer(),
@@ -178,7 +178,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
       backgroundColor: theme.colorScheme.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -188,13 +188,13 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                     onPressed: () => Navigator.of(context).pop(),
                     icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       widget.routine.title,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.mutedText,
+                        color: AppColors.textMuted,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -202,7 +202,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xl),
               Text(
                 'Passo ${_currentStepIndex + 1} de ${_steps.length}',
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -210,7 +210,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                   color: theme.colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 currentStep,
                 style: theme.textTheme.displaySmall?.copyWith(
@@ -218,7 +218,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                   color: theme.colorScheme.onSurface,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppSpacing.xxl),
               if (_remainingTime != null) ...[
                 Center(
                   child: Text(
@@ -229,7 +229,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppSpacing.xxl),
               ],
               const Spacer(),
               Row(
@@ -257,7 +257,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.lg),
                   Expanded(
                     child: NeuroButton(
                       label: 'Próximo',

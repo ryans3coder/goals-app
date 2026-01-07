@@ -122,14 +122,14 @@ class _GoalWizardState extends State<GoalWizard> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               'Prazo',
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
                 Expanded(
@@ -171,13 +171,13 @@ class _GoalWizardState extends State<GoalWizard> {
                 child: Text(
                   'Nenhuma milestone adicionada.',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppTheme.mutedText,
+                    color: AppColors.textMuted,
                   ),
                 ),
               ),
             for (int index = 0; index < _milestoneControllers.length; index++)
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
                 child: Row(
                   children: [
                     Expanded(
@@ -189,7 +189,7 @@ class _GoalWizardState extends State<GoalWizard> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     IconButton(
                       onPressed: () => _removeMilestoneField(index),
                       icon: const Icon(Icons.close),
@@ -222,47 +222,47 @@ class _GoalWizardState extends State<GoalWizard> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'Prazo: ${_formatDeadline(_deadline)}',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.mutedText,
+                color: AppColors.textMuted,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Text(
               'Porquê',
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               _reasonController.text.trim().isEmpty
                   ? 'Sem descrição'
                   : _reasonController.text.trim(),
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.mutedText,
+                color: AppColors.textMuted,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Text(
               'Milestones',
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.sm),
             ..._milestoneControllers
                 .map((controller) => controller.text.trim())
                 .where((title) => title.isNotEmpty)
                 .map(
                   (title) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                     child: Text(
                       '• $title',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.mutedText,
+                        color: AppColors.textMuted,
                       ),
                     ),
                   ),
@@ -274,7 +274,7 @@ class _GoalWizardState extends State<GoalWizard> {
               Text(
                 'Nenhuma milestone definida.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.mutedText,
+                  color: AppColors.textMuted,
                 ),
               ),
           ],
@@ -288,10 +288,10 @@ class _GoalWizardState extends State<GoalWizard> {
     final theme = Theme.of(context);
     return Padding(
       padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: 16 + MediaQuery.of(context).viewInsets.bottom,
+        left: AppSpacing.lg,
+        right: AppSpacing.lg,
+        top: AppSpacing.lg,
+        bottom: AppSpacing.lg + MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -302,7 +302,7 @@ class _GoalWizardState extends State<GoalWizard> {
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Flexible(
             child: Stepper(
               currentStep: _currentStep,
@@ -325,7 +325,7 @@ class _GoalWizardState extends State<GoalWizard> {
                           : null,
                       child: Text(isLastStep ? 'Salvar' : 'Avançar'),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     if (_currentStep > 0)
                       TextButton(
                         onPressed: () {
