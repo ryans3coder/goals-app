@@ -9,28 +9,32 @@ import 'screens/main_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/auth_service.dart';
 import 'services/data_provider.dart';
-import 'services/local_data_store.dart';
 import 'services/remote_sync_service.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await Firebase.initializeApp();
-  } catch (error) {
-    debugPrint('Falha ao inicializar o Firebase: $error');
-  }
-  runApp(const NeuroSyncApp());
+  final firebaseInitialization = Firebase.initializeApp();
+  firebaseInitialization.catchError(
+    (error) => debugPrint('Falha ao inicializar o Firebase: $error'),
+  );
+  runApp(NeuroSyncApp(firebaseInitialization: firebaseInitialization));
 }
 
 class NeuroSyncApp extends StatelessWidget {
-  const NeuroSyncApp({super.key});
+  const NeuroSyncApp({super.key, required this.firebaseInitialization});
+
+  final Future<void> firebaseInitialization;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<AuthService>(create: (_) => AuthService()),
+        Provider<AuthService>(
+          create: (_) => AuthService(
+            firebaseInitialization: firebaseInitialization,
+          ),
+        ),
         Provider<RemoteSyncService>(
           create: (context) => FirebaseRemoteSyncService(
             authService: context.read<AuthService>(),
@@ -38,7 +42,6 @@ class NeuroSyncApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<DataProvider>(
           create: (context) => DataProvider(
-            localStore: LocalDataStore(),
             remoteSync: context.read<RemoteSyncService>(),
           ),
         ),

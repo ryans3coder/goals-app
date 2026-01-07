@@ -83,6 +83,9 @@ class _GoalWizardState extends State<GoalWizard> {
       reason: _reasonController.text.trim(),
       deadline: _deadline,
       milestones: milestones,
+      specific: title,
+      relevant: _reasonController.text.trim(),
+      timeBound: _deadline,
     );
 
     await context.read<DataProvider>().addGoal(goal);

@@ -6,6 +6,7 @@ class Habit {
     required List<String> frequency,
     required this.currentStreak,
     required this.isCompletedToday,
+    this.categoryId = '',
   }) : frequency = List.unmodifiable(frequency);
 
   final String id;
@@ -14,6 +15,7 @@ class Habit {
   final List<String> frequency;
   final int currentStreak;
   final bool isCompletedToday;
+  final String categoryId;
 
   factory Habit.fromMap(Map<String, dynamic> map, {String? id}) {
     return Habit(
@@ -23,6 +25,7 @@ class Habit {
       frequency: _parseFrequency(map['frequency']),
       currentStreak: (map['currentStreak'] as num?)?.toInt() ?? 0,
       isCompletedToday: (map['isCompletedToday'] as bool?) ?? false,
+      categoryId: (map['categoryId'] as String?) ?? '',
     );
   }
 
@@ -38,6 +41,7 @@ class Habit {
       'frequency': frequency,
       'currentStreak': currentStreak,
       'isCompletedToday': isCompletedToday,
+      'categoryId': categoryId,
     };
   }
 
