@@ -1,0 +1,348 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import '../models/goal.dart';
+import '../models/milestone.dart';
+import '../services/data_provider.dart';
+
+class GoalWizard extends StatefulWidget {
+  const GoalWizard({super.key});
+
+  @override
+  State<GoalWizard> createState() => _GoalWizardState();
+}
+
+class _GoalWizardState extends State<GoalWizard> {
+  final _titleController = TextEditingController();
+  final _reasonController = TextEditingController();
+  final List<TextEditingController> _milestoneControllers = [];
+  int _currentStep = 0;
+  DateTime? _deadline;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _reasonController.dispose();
+    for (final controller in _milestoneControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _addMilestoneField() {
+    setState(() {
+      _milestoneControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeMilestoneField(int index) {
+    setState(() {
+      _milestoneControllers[index].dispose();
+      _milestoneControllers.removeAt(index);
+    });
+  }
+
+  Future<void> _pickDeadline() async {
+    final now = DateTime.now();
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: _deadline ?? now,
+      firstDate: now.subtract(const Duration(days: 1)),
+      lastDate: now.add(const Duration(days: 3650)),
+    );
+
+    if (selected != null) {
+      setState(() {
+        _deadline = selected;
+      });
+    }
+  }
+
+  Future<void> _saveGoal() async {
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Informe o título da meta.')),
+      );
+      return;
+    }
+
+    final milestones = _milestoneControllers
+        .map((controller) => controller.text.trim())
+        .where((title) => title.isNotEmpty)
+        .map((title) => Milestone(title: title, isCompleted: false))
+        .toList();
+
+    final goal = Goal(
+      id: '',
+      userId: '',
+      title: title,
+      reason: _reasonController.text.trim(),
+      deadline: _deadline,
+      milestones: milestones,
+    );
+
+    await context.read<DataProvider>().addGoal(goal);
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  bool _canContinue() {
+    if (_currentStep == 0) {
+      return _titleController.text.trim().isNotEmpty;
+    }
+    return true;
+  }
+
+  String _formatDeadline(DateTime? deadline) {
+    if (deadline == null) {
+      return 'Sem prazo definido';
+    }
+    return '${deadline.day.toString().padLeft(2, '0')}/'
+        '${deadline.month.toString().padLeft(2, '0')}/'
+        '${deadline.year}';
+  }
+
+  List<Step> _buildSteps() {
+    return [
+      Step(
+        title: const Text('Defina a Meta'),
+        isActive: _currentStep >= 0,
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: 'Título',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Prazo',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _formatDeadline(_deadline),
+                    style: GoogleFonts.inter(fontSize: 14),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: _pickDeadline,
+                  icon: const Icon(Icons.date_range),
+                  label: const Text('Escolher'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      Step(
+        title: const Text('O Propósito'),
+        isActive: _currentStep >= 1,
+        content: TextField(
+          controller: _reasonController,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            labelText: 'Porquê',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      Step(
+        title: const Text('Milestones'),
+        isActive: _currentStep >= 2,
+        content: Column(
+          children: [
+            if (_milestoneControllers.isEmpty)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Nenhuma milestone adicionada.',
+                  style: GoogleFonts.inter(fontSize: 13, color: Colors.white70),
+                ),
+              ),
+            for (int index = 0; index < _milestoneControllers.length; index++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _milestoneControllers[index],
+                        decoration: InputDecoration(
+                          labelText: 'Milestone ${index + 1}',
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () => _removeMilestoneField(index),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _addMilestoneField,
+                icon: const Icon(Icons.add),
+                label: const Text('Adicionar milestone'),
+              ),
+            ),
+          ],
+        ),
+      ),
+      Step(
+        title: const Text('Revisão'),
+        isActive: _currentStep >= 3,
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _titleController.text.trim().isEmpty
+                  ? 'Sem título'
+                  : _titleController.text.trim(),
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Prazo: ${_formatDeadline(_deadline)}',
+              style: GoogleFonts.inter(fontSize: 14, color: Colors.white70),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Porquê',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _reasonController.text.trim().isEmpty
+                  ? 'Sem descrição'
+                  : _reasonController.text.trim(),
+              style: GoogleFonts.inter(fontSize: 14, color: Colors.white70),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Milestones',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 6),
+            ..._milestoneControllers
+                .map((controller) => controller.text.trim())
+                .where((title) => title.isNotEmpty)
+                .map(
+                  (title) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      '• $title',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ),
+                ),
+            if (_milestoneControllers
+                .map((controller) => controller.text.trim())
+                .where((title) => title.isNotEmpty)
+                .isEmpty)
+              Text(
+                'Nenhuma milestone definida.',
+                style: GoogleFonts.inter(fontSize: 14, color: Colors.white70),
+              ),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: 16 + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Adicionar Meta',
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Flexible(
+            child: Stepper(
+              currentStep: _currentStep,
+              steps: _buildSteps(),
+              controlsBuilder: (context, details) {
+                final isLastStep = _currentStep == _buildSteps().length - 1;
+                return Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: _canContinue()
+                          ? () {
+                              if (isLastStep) {
+                                _saveGoal();
+                              } else {
+                                setState(() {
+                                  _currentStep += 1;
+                                });
+                              }
+                            }
+                          : null,
+                      child: Text(isLastStep ? 'Salvar' : 'Avançar'),
+                    ),
+                    const SizedBox(width: 12),
+                    if (_currentStep > 0)
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _currentStep -= 1;
+                          });
+                        },
+                        child: const Text('Voltar'),
+                      ),
+                  ],
+                );
+              },
+              onStepTapped: (index) {
+                setState(() {
+                  _currentStep = index;
+                });
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
