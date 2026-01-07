@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'milestone.dart';
 
 class Goal {
@@ -41,18 +39,18 @@ class Goal {
       'userId': userId,
       'title': title,
       'reason': reason,
-      'deadline': deadline == null ? null : Timestamp.fromDate(deadline!),
+      'deadline': deadline?.toIso8601String(),
       'milestones': milestones.map((milestone) => milestone.toMap()).toList(),
     };
   }
 
   static DateTime? _dateTimeFromMap(dynamic value) {
-    if (value is Timestamp) {
-      return value.toDate();
-    }
-
     if (value is String) {
       return DateTime.tryParse(value);
+    }
+
+    if (value is DateTime) {
+      return value;
     }
 
     return null;
