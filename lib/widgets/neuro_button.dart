@@ -18,8 +18,26 @@ class NeuroButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
+      height: 56,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF6B1B3A),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+        ).copyWith(
+          overlayColor: MaterialStateProperty.all(
+            Colors.white.withOpacity(0.12),
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: AnimatedSwitcher(
