@@ -10,10 +10,10 @@ enum RoutineRunTimerStatus {
 }
 
 class RoutineRunTimerController extends ChangeNotifier {
-  RoutineRunTimerController({VoidCallback? onStepCompleted})
+  RoutineRunTimerController({Future<void> Function()? onStepCompleted})
       : _onStepCompleted = onStepCompleted;
 
-  final VoidCallback? _onStepCompleted;
+  final Future<void> Function()? _onStepCompleted;
 
   Timer? _timer;
   Duration? _remaining;
@@ -73,7 +73,7 @@ class RoutineRunTimerController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _handleTick(Timer timer) {
+  Future<void> _handleTick(Timer timer) async {
     if (_remaining == null) {
       timer.cancel();
       return;
@@ -83,7 +83,9 @@ class RoutineRunTimerController extends ChangeNotifier {
       _status = RoutineRunTimerStatus.completed;
       notifyListeners();
       timer.cancel();
-      _onStepCompleted?.call();
+      if (_onStepCompleted != null) {
+        await _onStepCompleted!.call();
+      }
       return;
     }
     _remaining = _remaining! - const Duration(seconds: 1);
