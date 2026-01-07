@@ -5,6 +5,8 @@ import '../models/goal.dart';
 import '../models/milestone.dart';
 import '../services/data_provider.dart';
 import '../theme/app_theme.dart';
+import '../theme/app_strings.dart';
+import '../widgets/app_buttons.dart';
 
 class GoalWizard extends StatefulWidget {
   const GoalWizard({super.key});
@@ -297,7 +299,7 @@ class _GoalWizardState extends State<GoalWizard> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Adicionar Meta',
+            AppStrings.addGoalTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -311,7 +313,9 @@ class _GoalWizardState extends State<GoalWizard> {
                 final isLastStep = _currentStep == _buildSteps().length - 1;
                 return Row(
                   children: [
-                    ElevatedButton(
+                    AppPrimaryButton(
+                      label: isLastStep ? AppStrings.save : AppStrings.advance,
+                      isFullWidth: false,
                       onPressed: _canContinue()
                           ? () {
                               if (isLastStep) {
@@ -323,17 +327,17 @@ class _GoalWizardState extends State<GoalWizard> {
                               }
                             }
                           : null,
-                      child: Text(isLastStep ? 'Salvar' : 'Avançar'),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     if (_currentStep > 0)
-                      TextButton(
+                      AppSecondaryButton(
+                        label: AppStrings.back,
+                        isFullWidth: false,
                         onPressed: () {
                           setState(() {
                             _currentStep -= 1;
                           });
                         },
-                        child: const Text('Voltar'),
                       ),
                   ],
                 );

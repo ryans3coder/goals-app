@@ -4,8 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/neuro_button.dart';
-import '../widgets/neuro_card.dart';
+import '../theme/app_strings.dart';
+import '../widgets/app_buttons.dart';
+import '../widgets/app_card.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -55,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-          child: NeuroCard(
+          child: AppCard(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -74,8 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                NeuroButton(
-                  label: 'Entrar com Google',
+                AppPrimaryButton(
+                  label: AppStrings.signInGoogle,
                   icon: const Icon(Icons.login),
                   onPressed: _handleSignIn,
                   isLoading: _isLoading,
