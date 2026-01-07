@@ -25,7 +25,9 @@ class HabitUseCases {
       frequency: habit.frequency,
       currentStreak: updatedStreak,
       isCompletedToday: isCompletedToday,
-      categoryId: habit.categoryId,
+      emoji: habit.emoji,
+      description: habit.description,
+      category: habit.category,
     );
   }
 

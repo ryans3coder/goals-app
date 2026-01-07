@@ -8,11 +8,13 @@ import '../models/goal.dart';
 import '../models/habit.dart';
 import '../models/milestone.dart';
 import '../models/routine.dart';
+import '../domain/habits/habit_form_options.dart';
 import '../services/auth_service.dart';
 import '../services/data_provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_strings.dart';
 import 'goal_wizard.dart';
+import 'habit_form_screen.dart';
 import 'routine_detail_screen.dart';
 import '../widgets/app_buttons.dart';
 import '../widgets/app_card.dart';
@@ -55,7 +57,20 @@ class _MainScreenState extends State<MainScreen> {
     ),
   ];
 
+  void _openHabitForm({Habit? habit}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => HabitFormScreen(habit: habit),
+      ),
+    );
+  }
+
   void _showCreateModal({required _CreationType initialType}) {
+    if (initialType == _CreationType.habit) {
+      _openHabitForm();
+      return;
+    }
+
     final dataProvider = context.read<DataProvider>();
     final titleController = TextEditingController();
     var selectedType = initialType;
@@ -98,39 +113,43 @@ class _MainScreenState extends State<MainScreen> {
                     },
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nome',
-                      border: OutlineInputBorder(),
+                  if (selectedType == _CreationType.habit) ...[
+                    Text(
+                      AppStrings.habitCreateHint,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textMuted,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  AppPrimaryButton(
-                    label: AppStrings.save,
-                    onPressed: () async {
-                      final title = titleController.text.trim();
-                      if (title.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Informe um nome para continuar.'),
-                          ),
-                        );
-                        return;
-                      }
+                    const SizedBox(height: AppSpacing.lg),
+                    AppPrimaryButton(
+                      label: AppStrings.habitCreateAction,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _openHabitForm();
+                      },
+                    ),
+                  ] else ...[
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(
+                        labelText: AppStrings.nameLabel,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    AppPrimaryButton(
+                      label: AppStrings.save,
+                      onPressed: () async {
+                        final title = titleController.text.trim();
+                        if (title.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(AppStrings.nameRequired),
+                            ),
+                          );
+                          return;
+                        }
 
-                      if (selectedType == _CreationType.habit) {
-                        await dataProvider.addHabit(
-                          Habit(
-                            id: '',
-                            userId: '',
-                            title: title,
-                            frequency: const ['daily'],
-                            currentStreak: 0,
-                            isCompletedToday: false,
-                          ),
-                        );
-                      } else {
                         await dataProvider.addRoutine(
                           Routine(
                             id: '',
@@ -141,13 +160,13 @@ class _MainScreenState extends State<MainScreen> {
                             steps: const [],
                           ),
                         );
-                      }
 
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                  ),
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                    ),
+                  ],
                 ],
               ),
             );
@@ -196,15 +215,23 @@ class _MainScreenState extends State<MainScreen> {
           return const Center(child: CircularProgressIndicator());
         }
 
+        if (snapshot.hasError) {
+          return _buildEmptyState(
+            icon: Icons.self_improvement,
+            title: AppStrings.habitLoadErrorTitle,
+            message: AppStrings.habitLoadErrorMessage,
+            actionLabel: AppStrings.createHabit,
+            onAction: _openHabitForm,
+          );
+        }
+
         if (habits.isEmpty) {
           return _buildEmptyState(
             icon: Icons.self_improvement,
-            title: 'Sem hábitos por enquanto.',
-            message: 'Comece criando seu primeiro hábito diário.',
+            title: AppStrings.habitEmptyTitle,
+            message: AppStrings.habitEmptyMessage,
             actionLabel: AppStrings.createHabit,
-            onAction: () => _showCreateModal(
-              initialType: _CreationType.habit,
-            ),
+            onAction: _openHabitForm,
           );
         }
 
@@ -215,8 +242,15 @@ class _MainScreenState extends State<MainScreen> {
           itemBuilder: (context, index) {
             final habit = habits[index];
             final isCompleted = habit.isCompletedToday;
+            final emoji = habit.emoji.isNotEmpty
+                ? habit.emoji
+                : HabitFormOptions.fallbackEmoji;
+            final categoryLabel = habit.category.isNotEmpty
+                ? habit.category
+                : AppStrings.habitNoCategory;
 
             return AppCard(
+              onTap: () => _openHabitForm(habit: habit),
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 250),
                 opacity: isCompleted ? 0.7 : 1,
@@ -224,11 +258,36 @@ class _MainScreenState extends State<MainScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Text(
-                        habit.title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Row(
+                        children: [
+                          Text(
+                            emoji,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  habit.title,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  categoryLabel,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: AppSpacing.lg),

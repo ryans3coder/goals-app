@@ -9,6 +9,7 @@ import '../domain/use_cases/goal_use_cases.dart';
 import '../domain/use_cases/habit_use_cases.dart';
 import '../domain/use_cases/routine_step_use_cases.dart';
 import '../domain/use_cases/routine_use_cases.dart';
+import '../domain/habits/habit_form_options.dart';
 import '../models/category.dart';
 import '../models/goal.dart';
 import '../models/habit.dart';
@@ -175,7 +176,9 @@ class DataProvider extends ChangeNotifier {
       frequency: habit.frequency,
       currentStreak: habit.currentStreak,
       isCompletedToday: habit.isCompletedToday,
-      categoryId: habit.categoryId,
+      emoji: habit.emoji,
+      description: habit.description,
+      category: habit.category,
     );
   }
 
@@ -257,14 +260,19 @@ class DataProvider extends ChangeNotifier {
   Future<void> addHabit(Habit habit) async {
     await _ensureLoaded();
     final habitId = habit.id.isEmpty ? _generateId() : habit.id;
+    final frequency = habit.frequency.isNotEmpty
+        ? habit.frequency
+        : HabitFormOptions.defaultFrequency;
     final normalizedHabit = Habit(
       id: habitId,
       userId: habit.userId.isEmpty ? 'local' : habit.userId,
       title: habit.title,
-      frequency: habit.frequency,
+      frequency: frequency,
       currentStreak: habit.currentStreak,
       isCompletedToday: habit.isCompletedToday,
-      categoryId: habit.categoryId,
+      emoji: habit.emoji,
+      description: habit.description,
+      category: habit.category,
     );
 
     final index = _habits.indexWhere((item) => item.id == habitId);
@@ -275,6 +283,18 @@ class DataProvider extends ChangeNotifier {
     }
     await _saveLocalState(
       persist: () => _habitUseCases.upsert(normalizedHabit),
+    );
+    _scheduleRemoteSync();
+  }
+
+  Future<void> deleteHabit(Habit habit) async {
+    await _ensureLoaded();
+    if (habit.id.isEmpty) {
+      return;
+    }
+    _habits.removeWhere((item) => item.id == habit.id);
+    await _saveLocalState(
+      persist: () => _habitUseCases.deleteById(habit.id),
     );
     _scheduleRemoteSync();
   }
