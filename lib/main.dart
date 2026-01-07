@@ -49,7 +49,9 @@ class NeuroSyncApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
         home: const StartupGate(),
       ),
     );

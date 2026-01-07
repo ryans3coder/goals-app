@@ -52,10 +52,10 @@ class _MainScreenState extends State<MainScreen> {
           builder: (context, setModalState) {
             return Padding(
               padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: 24 + MediaQuery.of(context).viewInsets.bottom,
+                left: AppSpacing.xl,
+                right: AppSpacing.xl,
+                top: AppSpacing.xl,
+                bottom: AppSpacing.xl + MediaQuery.of(context).viewInsets.bottom,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -67,7 +67,7 @@ class _MainScreenState extends State<MainScreen> {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Wrap(
                     spacing: 12,
                     children: [
@@ -91,7 +91,7 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   TextField(
                     controller: titleController,
                     decoration: const InputDecoration(
@@ -99,7 +99,7 @@ class _MainScreenState extends State<MainScreen> {
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -174,16 +174,16 @@ class _MainScreenState extends State<MainScreen> {
     final theme = Theme.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
-              size: 80,
-              color: Colors.grey.shade700,
+              size: AppSizes.iconEmptyState,
+              color: theme.colorScheme.onSurface.withOpacity(0.45),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.page),
             Text(
               title,
               textAlign: TextAlign.center,
@@ -191,12 +191,12 @@ class _MainScreenState extends State<MainScreen> {
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Text(
               message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.mutedText,
+                color: AppColors.textMuted,
               ),
             ),
           ],
@@ -225,9 +225,9 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         return ListView.separated(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.page),
           itemCount: habits.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
           itemBuilder: (context, index) {
             final habit = habits[index];
             final isCompleted = habit.isCompletedToday;
@@ -247,7 +247,7 @@ class _MainScreenState extends State<MainScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppSpacing.lg),
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
                       transitionBuilder: (child, animation) {
@@ -260,17 +260,19 @@ class _MainScreenState extends State<MainScreen> {
                           ? Container(
                               key: const ValueKey('done'),
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 10,
+                                horizontal: AppSpacing.lg,
+                                vertical: AppSpacing.sm,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.success.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
+                                color:
+                                    theme.colorScheme.tertiary.withOpacity(0.18),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.sm),
                               ),
                               child: const Row(
                                 children: [
-                                  Icon(Icons.check_circle, size: 18),
-                                  SizedBox(width: 8),
+                                  Icon(Icons.check_circle, size: AppSizes.iconSmall),
+                                  SizedBox(width: AppSpacing.sm),
                                   Text('Feito'),
                                 ],
                               ),
@@ -318,9 +320,9 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         return ListView.separated(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.page),
           itemCount: routines.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
           itemBuilder: (context, index) {
             final routine = routines[index];
             return NeuroCard(
@@ -341,11 +343,11 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                   ),
                   if (routine.triggerTime.isNotEmpty) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       routine.triggerTime,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.mutedText,
+                        color: AppColors.textMuted,
                       ),
                     ),
                   ],
@@ -378,9 +380,9 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         return ListView.separated(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.page),
           itemCount: goals.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
           itemBuilder: (context, index) {
             final goal = goals[index];
             final totalMilestones = goal.milestones.length;
@@ -401,33 +403,33 @@ class _MainScreenState extends State<MainScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     goal.reason.isEmpty ? 'Sem propósito' : goal.reason,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.mutedText,
+                      color: AppColors.textMuted,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                     child: LinearProgressIndicator(
                       value: progress,
-                      minHeight: 8,
+                      minHeight: AppSizes.progressHeight,
                       backgroundColor:
                           theme.colorScheme.onSurface.withOpacity(0.12),
-                      color: AppTheme.success,
+                      color: theme.colorScheme.primary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     '$completedMilestones de $totalMilestones milestones concluídas',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.mutedText,
+                      color: AppColors.textMuted,
                     ),
                   ),
                   if (goal.milestones.isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     ...goal.milestones.asMap().entries.map(
                       (entry) {
                         final milestone = entry.value;
@@ -496,7 +498,7 @@ class _MainScreenState extends State<MainScreen> {
 
     if (user == null) {
       return Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.page),
         child: NeuroCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -507,14 +509,14 @@ class _MainScreenState extends State<MainScreen> {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 'Faça login para salvar seu progresso e sincronizar em todos os dispositivos.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.mutedText,
+                  color: AppColors.textMuted,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.page),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -549,7 +551,7 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.page),
       child: NeuroCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -560,14 +562,14 @@ class _MainScreenState extends State<MainScreen> {
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               user.email ?? 'Email não informado',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.mutedText,
+                color: AppColors.textMuted,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.page),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -628,7 +630,7 @@ class _MainScreenState extends State<MainScreen> {
               onPressed: _currentIndex == _goalsTabIndex
                   ? _showGoalWizard
                   : _showCreateModal,
-              child: const Icon(Icons.add, size: 32),
+              child: const Icon(Icons.add, size: AppSizes.iconFab),
             )
           : null,
       bottomNavigationBar: BottomNavigationBar(

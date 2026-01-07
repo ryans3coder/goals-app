@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 class NeuroCard extends StatelessWidget {
   const NeuroCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(24),
+    this.padding = const EdgeInsets.all(AppSpacing.xl),
     this.onTap,
   });
 
@@ -15,7 +17,7 @@ class NeuroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const borderRadius = BorderRadius.all(Radius.circular(20));
+    final borderRadius = BorderRadius.circular(AppRadii.md);
 
     return Material(
       color: Colors.transparent,
@@ -24,14 +26,14 @@ class NeuroCard extends StatelessWidget {
         borderRadius: borderRadius,
         child: Ink(
           decoration: BoxDecoration(
-            color: theme.cardColor,
+            color: theme.colorScheme.surface,
             borderRadius: borderRadius,
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: theme.colorScheme.outline),
             boxShadow: [
               BoxShadow(
-                color: theme.shadowColor.withOpacity(0.2),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
+                color: theme.colorScheme.onSurface.withOpacity(0.06),
+                blurRadius: 18,
+                offset: const Offset(0, 10),
               ),
             ],
           ),

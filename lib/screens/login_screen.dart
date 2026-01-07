@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
           child: NeuroCard(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -65,23 +65,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 Text(
                   'Organize hábitos, rotinas e metas com ciência comportamental.',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppTheme.mutedText,
+                    color: AppColors.textMuted,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 NeuroButton(
                   label: 'Entrar com Google',
-                  icon: const Icon(Icons.login, color: Colors.white),
+                  icon: const Icon(Icons.login),
                   onPressed: _handleSignIn,
                   isLoading: _isLoading,
                 ),
                 if (_errorMessage != null) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
                     _errorMessage!,
                     style: theme.textTheme.bodySmall?.copyWith(

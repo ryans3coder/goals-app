@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 class NeuroButton extends StatelessWidget {
   const NeuroButton({
     super.key,
@@ -19,7 +21,7 @@ class NeuroButton extends StatelessWidget {
     final theme = Theme.of(context);
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: AppSpacing.buttonHeight,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
@@ -27,30 +29,31 @@ class NeuroButton extends StatelessWidget {
           foregroundColor: theme.colorScheme.onPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadii.md),
           ),
-          textStyle: const TextStyle(
+          textStyle: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
-            fontSize: 16,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         ).copyWith(
           overlayColor: MaterialStateProperty.all(
             theme.colorScheme.onPrimary.withOpacity(0.12),
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
             child: isLoading
-                ? const SizedBox(
-                    key: ValueKey('loading'),
+                ? SizedBox(
+                    key: const ValueKey('loading'),
                     height: 20,
                     width: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.colorScheme.onPrimary,
+                      ),
                     ),
                   )
                 : Row(
@@ -58,8 +61,13 @@ class NeuroButton extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (icon != null) ...[
-                        icon!,
-                        const SizedBox(width: 12),
+                        IconTheme(
+                          data: IconThemeData(
+                            color: theme.colorScheme.onPrimary,
+                          ),
+                          child: icon!,
+                        ),
+                        const SizedBox(width: AppSpacing.md),
                       ],
                       Text(label),
                     ],

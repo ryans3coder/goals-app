@@ -55,13 +55,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
+          ),
           child: Column(
             children: [
               Expanded(
@@ -80,23 +80,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       children: [
                         Icon(
                           slide.icon,
-                          size: 96,
-                          color: AppTheme.wine,
+                          size: AppSizes.iconHero,
+                          color: AppColors.primary,
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: AppSpacing.xxl),
                         Text(
                           slide.title,
                           textAlign: TextAlign.center,
-                          style: theme.textTheme.headlineSmall?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
                         Text(
                           slide.description,
                           textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.white70,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                            color: AppColors.textMuted,
                             height: 1.4,
                           ),
                         ),
@@ -111,24 +117,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   _slides.length,
                   (index) => AnimatedContainer(
                     duration: const Duration(milliseconds: 250),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: _currentIndex == index ? 20 : 8,
-                    height: 8,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                    ),
+                    width: _currentIndex == index
+                        ? AppSizes.indicatorActive
+                        : AppSizes.indicator,
+                    height: AppSizes.indicator,
                     decoration: BoxDecoration(
-                      color:
-                          _currentIndex == index ? AppTheme.wine : Colors.white30,
-                      borderRadius: BorderRadius.circular(8),
+                      color: _currentIndex == index
+                          ? AppColors.primary
+                          : AppColors.outline,
+                      borderRadius: BorderRadius.circular(AppRadii.sm),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xl),
               if (_currentIndex == _slides.length - 1)
                 SizedBox(
                   width: double.infinity,
                   child: NeuroButton(
                     label: 'COMEÇAR JORNADA',
-                    icon: const Icon(Icons.arrow_forward, color: Colors.white),
+                    icon: const Icon(Icons.arrow_forward),
                     onPressed: _handleFinish,
                   ),
                 )
