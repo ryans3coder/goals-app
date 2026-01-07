@@ -33,15 +33,15 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
   final Set<String> _skippedStepIds = {};
   late final RoutineRunTimerController _timerController;
   bool _hasAutoStarted = false;
+  bool _isHandlingStepChange = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _timerController = RoutineRunTimerController(
-      onStepCompleted: () {
-        unawaited(_handleStepCompletion(triggeredByTimer: true));
-      },
+      onStepCompleted: () async =>
+          _handleStepCompletion(triggeredByTimer: true),
     )..addListener(_handleTimerUpdated);
   }
 
@@ -115,58 +115,74 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
   }
 
   Future<void> _handleStepCompletion({bool triggeredByTimer = false}) async {
+    if (_isHandlingStepChange) {
+      return;
+    }
     if (_isCompleted) {
       return;
     }
+    _isHandlingStepChange = true;
 
-    final dataProvider = context.read<DataProvider>();
-    final steps = dataProvider.routineStepsByRoutineId(widget.routine.id);
-    if (steps.isEmpty) {
-      return;
+    try {
+      final dataProvider = context.read<DataProvider>();
+      final steps = dataProvider.routineStepsByRoutineId(widget.routine.id);
+      if (steps.isEmpty) {
+        return;
+      }
+      final maxIndex = steps.length - 1;
+      final safeIndex = _currentStepIndex.clamp(0, maxIndex);
+      final currentStep = steps[safeIndex];
+
+      if (!_completedStepIds.contains(currentStep.id)) {
+        _completedStepIds.add(currentStep.id);
+        await dataProvider.addRoutineEvent(
+          type: RoutineEventType.stepCompleted,
+          routineId: widget.routine.id,
+          habitId: currentStep.habitId,
+        );
+      }
+
+      if (triggeredByTimer) {
+        HapticFeedback.lightImpact();
+      }
+
+      await _advanceToNextStep(steps);
+    } finally {
+      _isHandlingStepChange = false;
     }
-    final maxIndex = steps.length - 1;
-    final safeIndex = _currentStepIndex.clamp(0, maxIndex);
-    final currentStep = steps[safeIndex];
-
-    if (!_completedStepIds.contains(currentStep.id)) {
-      _completedStepIds.add(currentStep.id);
-      await dataProvider.addRoutineEvent(
-        type: RoutineEventType.stepCompleted,
-        routineId: widget.routine.id,
-        habitId: currentStep.habitId,
-      );
-    }
-
-    if (triggeredByTimer) {
-      HapticFeedback.lightImpact();
-    }
-
-    await _advanceToNextStep(steps);
   }
 
   Future<void> _handleStepSkip() async {
+    if (_isHandlingStepChange) {
+      return;
+    }
     if (_isCompleted) {
       return;
     }
-    final dataProvider = context.read<DataProvider>();
-    final steps = dataProvider.routineStepsByRoutineId(widget.routine.id);
-    if (steps.isEmpty) {
-      return;
-    }
-    final maxIndex = steps.length - 1;
-    final safeIndex = _currentStepIndex.clamp(0, maxIndex);
-    final currentStep = steps[safeIndex];
+    _isHandlingStepChange = true;
+    try {
+      final dataProvider = context.read<DataProvider>();
+      final steps = dataProvider.routineStepsByRoutineId(widget.routine.id);
+      if (steps.isEmpty) {
+        return;
+      }
+      final maxIndex = steps.length - 1;
+      final safeIndex = _currentStepIndex.clamp(0, maxIndex);
+      final currentStep = steps[safeIndex];
 
-    if (!_skippedStepIds.contains(currentStep.id)) {
-      _skippedStepIds.add(currentStep.id);
-      await dataProvider.addRoutineEvent(
-        type: RoutineEventType.stepSkipped,
-        routineId: widget.routine.id,
-        habitId: currentStep.habitId,
-      );
-    }
+      if (!_skippedStepIds.contains(currentStep.id)) {
+        _skippedStepIds.add(currentStep.id);
+        await dataProvider.addRoutineEvent(
+          type: RoutineEventType.stepSkipped,
+          routineId: widget.routine.id,
+          habitId: currentStep.habitId,
+        );
+      }
 
-    await _advanceToNextStep(steps);
+      await _advanceToNextStep(steps);
+    } finally {
+      _isHandlingStepChange = false;
+    }
   }
 
   Future<void> _advanceToNextStep(List<RoutineStep> steps) async {
@@ -267,21 +283,21 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
     final currentStep = hasSteps ? steps[safeIndex] : null;
 
     if (_currentStepIndex != safeIndex && hasSteps) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
           return;
         }
-        unawaited(_startStepAtIndex(safeIndex, steps));
+        await _startStepAtIndex(safeIndex, steps);
       });
     }
 
     if (hasSteps && !_hasAutoStarted) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) {
           return;
         }
         _hasAutoStarted = true;
-        unawaited(_startStepAtIndex(0, steps));
+        await _startStepAtIndex(0, steps);
       });
     }
 

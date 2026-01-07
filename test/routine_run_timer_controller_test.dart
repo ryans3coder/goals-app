@@ -16,6 +16,7 @@ void main() {
       async.elapse(const Duration(seconds: 1));
 
       expect(controller.remaining, const Duration(seconds: 2));
+      expect(controller.status, RoutineRunTimerStatus.running);
     });
 
     controller.dispose();
@@ -39,6 +40,7 @@ void main() {
       async.elapse(const Duration(seconds: 1));
 
       expect(controller.remaining, const Duration(seconds: 9));
+      expect(controller.status, RoutineRunTimerStatus.running);
     });
 
     controller.dispose();
