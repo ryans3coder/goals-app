@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../controllers/routine_run_timer_controller.dart';
 import '../domain/message_bank.dart';
+import '../domain/routine_event_contract.dart';
 import '../domain/time_formatter.dart';
 import '../models/habit.dart';
 import '../models/routine.dart';
@@ -29,10 +30,6 @@ class RoutineRunScreen extends StatefulWidget {
 
 class _RoutineRunScreenState extends State<RoutineRunScreen>
     with WidgetsBindingObserver {
-  static const String _startedEvent = 'routine_started';
-  static const String _completedEvent = 'routine_completed';
-  static const String _stepCompletedEvent = 'step_completed';
-  static const String _stepSkippedEvent = 'step_skipped';
   int _currentStepIndex = 0;
   bool _isCompleted = false;
   bool _hasStarted = false;
@@ -41,6 +38,7 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
   String? _activeStepId;
   final Set<String> _completedStepIds = {};
   final Set<String> _skippedStepIds = {};
+  final Set<String> _finalizedStepIds = {};
   late final RoutineRunTimerController _timerController;
   bool _hasAutoStarted = false;
   bool _isHandlingStepChange = false;
@@ -105,7 +103,9 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
           type: RoutineEventType.routineStarted,
           routineId: widget.routine.id,
           executionId: _executionId,
-          metadata: const {'eventContract': _startedEvent},
+          metadata: const {
+            'eventContract': RoutineEventContract.routineStarted,
+          },
         );
   }
 
@@ -157,7 +157,8 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
       final safeIndex = _currentStepIndex.clamp(0, maxIndex);
       final currentStep = steps[safeIndex];
 
-      if (!_completedStepIds.contains(currentStep.id)) {
+      if (!_finalizedStepIds.contains(currentStep.id)) {
+        _finalizedStepIds.add(currentStep.id);
         _completedStepIds.add(currentStep.id);
         await dataProvider.addRoutineEventIfAbsent(
           type: RoutineEventType.stepCompleted,
@@ -166,10 +167,12 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
           habitId: currentStep.habitId,
           stepIndex: safeIndex,
           metadata: {
-            'eventContract': _stepCompletedEvent,
+            'eventContract': RoutineEventContract.stepCompleted,
             'triggeredByTimer': triggeredByTimer,
           },
         );
+      } else {
+        return;
       }
 
       if (triggeredByTimer) {
@@ -203,7 +206,8 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
       final safeIndex = _currentStepIndex.clamp(0, maxIndex);
       final currentStep = steps[safeIndex];
 
-      if (!_skippedStepIds.contains(currentStep.id)) {
+      if (!_finalizedStepIds.contains(currentStep.id)) {
+        _finalizedStepIds.add(currentStep.id);
         _skippedStepIds.add(currentStep.id);
         await dataProvider.addRoutineEventIfAbsent(
           type: RoutineEventType.stepSkipped,
@@ -211,8 +215,12 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
           executionId: _executionId,
           habitId: currentStep.habitId,
           stepIndex: safeIndex,
-          metadata: const {'eventContract': _stepSkippedEvent},
+          metadata: const {
+            'eventContract': RoutineEventContract.stepSkipped,
+          },
         );
+      } else {
+        return;
       }
 
       await _advanceToNextStep(steps);
@@ -268,7 +276,9 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
           type: RoutineEventType.routineCompleted,
           routineId: widget.routine.id,
           executionId: _executionId,
-          metadata: const {'eventContract': _completedEvent},
+          metadata: const {
+            'eventContract': RoutineEventContract.routineCompleted,
+          },
         );
     await _showVictoryFeedback();
   }

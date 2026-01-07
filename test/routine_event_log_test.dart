@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_application_1/data/repositories/local_routine_event_repository.dart';
 import 'package:flutter_application_1/models/routine_event.dart';
 import 'package:flutter_application_1/services/local_data_store.dart';
 
@@ -9,6 +10,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
     final store = LocalDataStore(preferences: preferences);
+    final repository = LocalRoutineEventRepository(localStore: store);
 
     const routineId = 'routine-1';
     const executionId = 'run-1';
@@ -22,9 +24,9 @@ void main() {
         id: '${RoutineEvent.encodeType(type)}-${stepIndex ?? 'none'}',
         type: type,
         routineId: routineId,
+        executionId: executionId,
         habitId: habitId,
         stepIndex: stepIndex,
-        metadata: const {'executionId': executionId},
         timestamp: DateTime(2024, 1, 1, 8, 0),
       );
       final dedupeKey = [
@@ -34,7 +36,7 @@ void main() {
         stepIndex?.toString() ?? '',
         executionId,
       ].join('|');
-      await store.addRoutineEventIfAbsent(
+      await repository.addEventIfAbsent(
         event: event,
         dedupeKey: dedupeKey,
       );
@@ -60,7 +62,7 @@ void main() {
     );
     await addEvent(RoutineEventType.routineCompleted);
 
-    final events = store.loadRoutineEvents();
+    final events = repository.fetchAll();
 
     expect(events, hasLength(4));
     expect(events[0].type, RoutineEventType.routineStarted);
