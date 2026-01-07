@@ -46,7 +46,9 @@ class AppSizes {
   static const double iconHero = 96;
   static const double iconEmptyState = 80;
   static const double iconSmall = 18;
+  static const double iconNav = 24;
   static const double iconFab = 32;
+  static const double navBarHeight = 72;
   static const double indicatorActive = 20;
   static const double indicator = 8;
   static const double progressHeight = 8;
@@ -139,16 +141,39 @@ class AppTheme {
         linearTrackColor: AppColors.outline,
         circularTrackColor: AppColors.outline,
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        elevation: 2,
+        elevation: 4,
+        highlightElevation: 6,
+        shape: const CircleBorder(),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textMuted,
         type: BottomNavigationBarType.fixed,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        height: AppSizes.navBarHeight,
+        indicatorColor: AppColors.primary.withOpacity(0.14),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            size: AppSizes.iconNav,
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primary
+                : AppColors.textMuted,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: states.contains(WidgetState.selected)
+                    ? AppColors.primary
+                    : AppColors.textMuted,
+              ),
+        ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.surface,
@@ -318,16 +343,39 @@ class AppTheme {
         linearTrackColor: AppDarkColors.outline,
         circularTrackColor: AppDarkColors.outline,
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppDarkColors.primary,
         foregroundColor: Colors.white,
-        elevation: 2,
+        elevation: 4,
+        highlightElevation: 6,
+        shape: const CircleBorder(),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppDarkColors.surface,
         selectedItemColor: AppDarkColors.primary,
         unselectedItemColor: AppDarkColors.textMuted,
         type: BottomNavigationBarType.fixed,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        height: AppSizes.navBarHeight,
+        indicatorColor: AppDarkColors.primary.withOpacity(0.2),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            size: AppSizes.iconNav,
+            color: states.contains(WidgetState.selected)
+                ? AppDarkColors.primary
+                : AppDarkColors.textMuted,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: states.contains(WidgetState.selected)
+                    ? AppDarkColors.primary
+                    : AppDarkColors.textMuted,
+              ),
+        ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppDarkColors.surface,

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../models/goal.dart';
@@ -609,22 +610,27 @@ class _MainScreenState extends State<MainScreen> {
       body: body,
       floatingActionButton: showFab
           ? FloatingActionButton.large(
-              onPressed: _currentIndex == _goalsTabIndex
-                  ? _showGoalWizard
-                  : () => _showCreateModal(
-                        initialType: _currentIndex == _routinesTabIndex
-                            ? _CreationType.routine
-                            : _CreationType.habit,
-                      ),
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                if (_currentIndex == _goalsTabIndex) {
+                  _showGoalWizard();
+                  return;
+                }
+                _showCreateModal(
+                  initialType: _currentIndex == _routinesTabIndex
+                      ? _CreationType.routine
+                      : _CreationType.habit,
+                );
+              },
               child: const Icon(Icons.add, size: AppSizes.iconFab),
             )
           : null,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: _tabs
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) => setState(() => _currentIndex = index),
+        destinations: _tabs
             .map(
-              (tab) => BottomNavigationBarItem(
+              (tab) => NavigationDestination(
                 icon: Icon(tab.icon),
                 label: tab.label,
               ),
