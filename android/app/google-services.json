@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "402393964286",
+    "project_id": "neurosync-362a9",
+    "storage_bucket": "neurosync-362a9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402393964286:android:8b4440f3b88e2936f7cfaf",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIBXZ7GhfUhDFyOWfllS_Qu8oGBlFBAIs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
