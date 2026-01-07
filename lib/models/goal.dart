@@ -45,12 +45,8 @@ class Goal {
   }
 
   static DateTime? _dateTimeFromMap(dynamic value) {
-    if (value is String) {
-      return DateTime.tryParse(value);
-    }
-
-    if (value is DateTime) {
-      return value;
+    if (value is String && value.isNotEmpty) {
+      return DateTime.parse(value);
     }
 
     return null;
