@@ -51,6 +51,27 @@ class DataProvider {
             .toList());
   }
 
+  Future<void> updateHabitCompletion({
+    required Habit habit,
+    required bool isCompletedToday,
+  }) async {
+    if (habit.id.isEmpty) {
+      throw StateError('Habit sem ID não pode ser atualizado.');
+    }
+
+    var updatedStreak = habit.currentStreak;
+    if (isCompletedToday && !habit.isCompletedToday) {
+      updatedStreak += 1;
+    } else if (!isCompletedToday && habit.isCompletedToday) {
+      updatedStreak = updatedStreak > 0 ? updatedStreak - 1 : 0;
+    }
+
+    await _habitsCollection.doc(habit.id).update({
+      'isCompletedToday': isCompletedToday,
+      'currentStreak': updatedStreak,
+    });
+  }
+
   Future<void> addRoutine(Routine routine) async {
     final userId = _userId;
     final docRef = routine.id.isNotEmpty
