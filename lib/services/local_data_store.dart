@@ -118,6 +118,26 @@ class LocalDataStore {
     );
   }
 
+  Future<void> addRoutineEventIfAbsent({
+    required RoutineEvent event,
+    required String dedupeKey,
+  }) async {
+    final preferences = await _getPreferences();
+    final raw = preferences.getString(_routineEventsKey);
+    final events = _decodeRoutineEvents(raw);
+    if (events.any((item) => item.id == event.id)) {
+      return;
+    }
+    if (events.any((item) => _eventDedupeKey(item) == dedupeKey)) {
+      return;
+    }
+    events.add(event);
+    await preferences.setString(
+      _routineEventsKey,
+      jsonEncode(events.map((item) => item.toMap()).toList()),
+    );
+  }
+
   Future<FeedbackPreferences> loadFeedbackPreferences() async {
     final preferences = await _getPreferences();
     final raw = preferences.getString(_feedbackPreferencesKey);
@@ -150,6 +170,27 @@ class LocalDataStore {
   List<RoutineEvent> loadRoutineEvents() {
     final raw = _resolvedPreferences?.getString(_routineEventsKey);
     return _decodeRoutineEvents(raw);
+  }
+
+  List<RoutineEvent> loadRoutineEventsByType(
+    RoutineEventType type,
+  ) {
+    final events = loadRoutineEvents();
+    return events.where((event) => event.type == type).toList();
+  }
+
+  List<RoutineEvent> loadRoutineEventsByDateRange({
+    required DateTime start,
+    required DateTime end,
+  }) {
+    final events = loadRoutineEvents();
+    return events
+        .where(
+          (event) =>
+              !event.timestamp.isBefore(start) &&
+              !event.timestamp.isAfter(end),
+        )
+        .toList();
   }
 
   List<Habit> _decodeHabits(String? raw) {
@@ -222,5 +263,16 @@ class LocalDataStore {
     } catch (_) {
       return [];
     }
+  }
+
+  String _eventDedupeKey(RoutineEvent event) {
+    final type = RoutineEvent.encodeType(event.type);
+    return [
+      type,
+      event.routineId,
+      event.habitId ?? '',
+      event.stepIndex?.toString() ?? '',
+      event.metadata?['executionId']?.toString() ?? '',
+    ].join('|');
   }
 }

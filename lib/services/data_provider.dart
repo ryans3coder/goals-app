@@ -417,22 +417,97 @@ class DataProvider extends ChangeNotifier {
     required RoutineEventType type,
     required String routineId,
     String? habitId,
+    int? stepIndex,
+    String? executionId,
+    Map<String, dynamic>? metadata,
     DateTime? timestamp,
   }) async {
     await _ensureLoaded();
     try {
+      final normalizedMetadata = {
+        ...?metadata,
+        if (executionId != null) 'executionId': executionId,
+      };
       await _localStore.addRoutineEvent(
         RoutineEvent(
           id: _generateId(),
           type: type,
           routineId: routineId,
           habitId: habitId,
+          stepIndex: stepIndex,
+          metadata: normalizedMetadata.isEmpty ? null : normalizedMetadata,
           timestamp: timestamp ?? DateTime.now(),
         ),
       );
     } catch (error) {
       debugPrint('Falha ao salvar evento da rotina: $error');
     }
+  }
+
+  Future<void> addRoutineEventIfAbsent({
+    required RoutineEventType type,
+    required String routineId,
+    required String executionId,
+    String? habitId,
+    int? stepIndex,
+    Map<String, dynamic>? metadata,
+    DateTime? timestamp,
+  }) async {
+    await _ensureLoaded();
+    try {
+      final normalizedMetadata = {
+        ...?metadata,
+        'executionId': executionId,
+      };
+      final dedupeKey = _buildRoutineEventDedupeKey(
+        type: type,
+        routineId: routineId,
+        habitId: habitId,
+        stepIndex: stepIndex,
+        executionId: executionId,
+      );
+      await _localStore.addRoutineEventIfAbsent(
+        event: RoutineEvent(
+          id: _generateId(),
+          type: type,
+          routineId: routineId,
+          habitId: habitId,
+          stepIndex: stepIndex,
+          metadata: normalizedMetadata,
+          timestamp: timestamp ?? DateTime.now(),
+        ),
+        dedupeKey: dedupeKey,
+      );
+    } catch (error) {
+      debugPrint('Falha ao salvar evento da rotina: $error');
+    }
+  }
+
+  List<RoutineEvent> loadRoutineEventsByDateRange({
+    required DateTime start,
+    required DateTime end,
+  }) {
+    return _localStore.loadRoutineEventsByDateRange(start: start, end: end);
+  }
+
+  List<RoutineEvent> loadRoutineEventsByType(RoutineEventType type) {
+    return _localStore.loadRoutineEventsByType(type);
+  }
+
+  String _buildRoutineEventDedupeKey({
+    required RoutineEventType type,
+    required String routineId,
+    String? habitId,
+    int? stepIndex,
+    String? executionId,
+  }) {
+    return [
+      RoutineEvent.encodeType(type),
+      routineId,
+      habitId ?? '',
+      stepIndex?.toString() ?? '',
+      executionId ?? '',
+    ].join('|');
   }
 
   Future<void> addGoal(Goal goal) async {
