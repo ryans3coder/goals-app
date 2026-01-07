@@ -133,4 +133,17 @@ class DataProvider {
             .map((doc) => Goal.fromMap(doc.data(), id: doc.id))
             .toList());
   }
+
+  Future<void> updateGoalMilestones({
+    required Goal goal,
+  }) async {
+    if (goal.id.isEmpty) {
+      throw StateError('Goal sem ID não pode ser atualizado.');
+    }
+
+    await _goalsCollection.doc(goal.id).update({
+      'milestones':
+          goal.milestones.map((milestone) => milestone.toMap()).toList(),
+    });
+  }
 }

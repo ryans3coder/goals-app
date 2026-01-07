@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '../models/goal.dart';
 import '../models/habit.dart';
+import '../models/milestone.dart';
 import '../models/routine.dart';
 import '../services/auth_service.dart';
 import '../services/data_provider.dart';
+import 'goal_wizard.dart';
 import 'routine_detail_screen.dart';
 import '../widgets/neuro_card.dart';
 
@@ -21,6 +24,7 @@ class _MainScreenState extends State<MainScreen> {
 
   static const _habitsTabIndex = 0;
   static const _routinesTabIndex = 1;
+  static const _goalsTabIndex = 2;
 
   static const _tabs = [
     _TabData('Hábitos', Icons.check_circle_outline),
@@ -147,6 +151,18 @@ class _MainScreenState extends State<MainScreen> {
         );
       },
     ).whenComplete(titleController.dispose);
+  }
+
+  void _showGoalWizard() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => const GoalWizard(),
+    );
   }
 
   Widget _buildPlaceholder(String label) {
@@ -323,11 +339,140 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  Widget _buildGoalsTab() {
+    return StreamBuilder<List<Goal>>(
+      stream: context.read<DataProvider>().watchGoals(),
+      builder: (context, snapshot) {
+        final goals = snapshot.data ?? const [];
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (goals.isEmpty) {
+          return _buildPlaceholder('Sem metas por enquanto.');
+        }
+
+        return ListView.separated(
+          padding: const EdgeInsets.all(20),
+          itemCount: goals.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          itemBuilder: (context, index) {
+            final goal = goals[index];
+            final totalMilestones = goal.milestones.length;
+            final completedMilestones = goal.milestones
+                .where((milestone) => milestone.isCompleted)
+                .length;
+            final progress = totalMilestones == 0
+                ? 0.0
+                : completedMilestones / totalMilestones;
+
+            return NeuroCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    goal.title,
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    goal.reason.isEmpty ? 'Sem propósito' : goal.reason,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 8,
+                      backgroundColor: Colors.white12,
+                      color: Colors.greenAccent,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '$completedMilestones de $totalMilestones milestones concluídas',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  if (goal.milestones.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    ...goal.milestones.asMap().entries.map(
+                      (entry) {
+                        final milestone = entry.value;
+                        return Row(
+                          children: [
+                            Checkbox(
+                              value: milestone.isCompleted,
+                              onChanged: (value) async {
+                                final updatedMilestones = [
+                                  for (final item in goal.milestones)
+                                    Milestone(
+                                      title: item.title,
+                                      isCompleted: item.isCompleted,
+                                    ),
+                                ];
+                                updatedMilestones[entry.key] = Milestone(
+                                  title: milestone.title,
+                                  isCompleted: value ?? false,
+                                );
+                                await context
+                                    .read<DataProvider>()
+                                    .updateGoalMilestones(
+                                      goal: Goal(
+                                        id: goal.id,
+                                        userId: goal.userId,
+                                        title: goal.title,
+                                        reason: goal.reason,
+                                        deadline: goal.deadline,
+                                        milestones: updatedMilestones,
+                                      ),
+                                    );
+                              },
+                            ),
+                            Expanded(
+                              child: Text(
+                                milestone.title,
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: milestone.isCompleted
+                                      ? Colors.white54
+                                      : Colors.white,
+                                  decoration: milestone.isCompleted
+                                      ? TextDecoration.lineThrough
+                                      : TextDecoration.none,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final activeTab = _tabs[_currentIndex];
-    final showFab =
-        _currentIndex == _habitsTabIndex || _currentIndex == _routinesTabIndex;
+    final showFab = _currentIndex == _habitsTabIndex ||
+        _currentIndex == _routinesTabIndex ||
+        _currentIndex == _goalsTabIndex;
 
     Widget body;
     switch (_currentIndex) {
@@ -336,6 +481,9 @@ class _MainScreenState extends State<MainScreen> {
         break;
       case _routinesTabIndex:
         body = _buildRoutinesTab();
+        break;
+      case _goalsTabIndex:
+        body = _buildGoalsTab();
         break;
       default:
         body = _buildPlaceholder(activeTab.label);
@@ -354,7 +502,9 @@ class _MainScreenState extends State<MainScreen> {
       body: body,
       floatingActionButton: showFab
           ? FloatingActionButton(
-              onPressed: _showCreateModal,
+              onPressed: _currentIndex == _goalsTabIndex
+                  ? _showGoalWizard
+                  : _showCreateModal,
               child: const Icon(Icons.add),
             )
           : null,
