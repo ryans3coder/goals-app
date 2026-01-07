@@ -30,6 +30,9 @@ class DataProvider {
   CollectionReference<Map<String, dynamic>> get _goalsCollection =>
       _firestore.collection('goals');
 
+  CollectionReference<Map<String, dynamic>> get _routineHistoryCollection =>
+      _firestore.collection('routine_history');
+
   Future<void> addHabit(Habit habit) async {
     final userId = _userId;
     final docRef = habit.id.isNotEmpty
@@ -91,6 +94,23 @@ class DataProvider {
         .map((snapshot) => snapshot.docs
             .map((doc) => Routine.fromMap(doc.data(), id: doc.id))
             .toList());
+  }
+
+  Future<void> addRoutineHistory({
+    required Routine routine,
+    DateTime? completedAt,
+  }) async {
+    final userId = _userId;
+    final docRef = _routineHistoryCollection.doc();
+    final timestamp = completedAt ?? DateTime.now();
+    await docRef.set({
+      'id': docRef.id,
+      'userId': userId,
+      'routineId': routine.id,
+      'routineTitle': routine.title,
+      'completedAt': Timestamp.fromDate(timestamp),
+      'steps': routine.steps,
+    });
   }
 
   Future<void> addGoal(Goal goal) async {

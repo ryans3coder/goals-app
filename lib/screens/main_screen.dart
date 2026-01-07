@@ -290,7 +290,7 @@ class _MainScreenState extends State<MainScreen> {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => const RoutineDetailScreen(),
+                    builder: (_) => RoutineDetailScreen(routine: routine),
                   ),
                 );
               },
