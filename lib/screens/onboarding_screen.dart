@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../theme/app_theme.dart';
-import '../widgets/neuro_button.dart';
+import '../theme/app_strings.dart';
+import '../widgets/app_buttons.dart';
 import 'main_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -137,7 +138,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               if (_currentIndex == _slides.length - 1)
                 SizedBox(
                   width: double.infinity,
-                  child: NeuroButton(
+                  child: AppPrimaryButton(
                     label: 'COMEÇAR JORNADA',
                     icon: const Icon(Icons.arrow_forward),
                     onPressed: _handleFinish,
@@ -146,7 +147,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               else
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton(
+                  child: AppSecondaryButton(
                     onPressed: () {
                       _pageController.animateToPage(
                         _slides.length - 1,
@@ -154,7 +155,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         curve: Curves.easeOut,
                       );
                     },
-                    child: const Text('Pular'),
+                    label: AppStrings.skip,
                   ),
                 ),
             ],

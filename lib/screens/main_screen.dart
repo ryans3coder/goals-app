@@ -9,9 +9,14 @@ import '../models/routine.dart';
 import '../services/auth_service.dart';
 import '../services/data_provider.dart';
 import '../theme/app_theme.dart';
+import '../theme/app_strings.dart';
 import 'goal_wizard.dart';
 import 'routine_detail_screen.dart';
-import '../widgets/neuro_card.dart';
+import '../widgets/app_buttons.dart';
+import '../widgets/app_card.dart';
+import '../widgets/app_progress_bar.dart';
+import '../widgets/app_segmented_control.dart';
+import '../widgets/empty_state_widget.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -35,10 +40,23 @@ class _MainScreenState extends State<MainScreen> {
     _TabData('Perfil', Icons.person_outline),
   ];
 
-  void _showCreateModal() {
+  static const _creationOptions = [
+    SegmentedOption(
+      value: _CreationType.habit,
+      label: AppStrings.habitLabel,
+      icon: Icons.check_circle_outline,
+    ),
+    SegmentedOption(
+      value: _CreationType.routine,
+      label: AppStrings.routineLabel,
+      icon: Icons.schedule,
+    ),
+  ];
+
+  void _showCreateModal({required _CreationType initialType}) {
     final dataProvider = context.read<DataProvider>();
     final titleController = TextEditingController();
-    var selectedType = _CreationType.habit;
+    var selectedType = initialType;
     final theme = Theme.of(context);
 
     showModalBottomSheet(
@@ -62,34 +80,20 @@ class _MainScreenState extends State<MainScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Criar novo',
+                    AppStrings.createNew,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  Wrap(
-                    spacing: 12,
-                    children: [
-                      ChoiceChip(
-                        label: const Text('Hábito'),
-                        selected: selectedType == _CreationType.habit,
-                        onSelected: (_) {
-                          setModalState(() {
-                            selectedType = _CreationType.habit;
-                          });
-                        },
-                      ),
-                      ChoiceChip(
-                        label: const Text('Rotina'),
-                        selected: selectedType == _CreationType.routine,
-                        onSelected: (_) {
-                          setModalState(() {
-                            selectedType = _CreationType.routine;
-                          });
-                        },
-                      ),
-                    ],
+                  AppSegmentedControl<_CreationType>(
+                    options: _creationOptions,
+                    selected: selectedType,
+                    onChanged: (value) {
+                      setModalState(() {
+                        selectedType = value;
+                      });
+                    },
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   TextField(
@@ -100,50 +104,47 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final title = titleController.text.trim();
-                        if (title.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Informe um nome para continuar.'),
-                            ),
-                          );
-                          return;
-                        }
+                  AppPrimaryButton(
+                    label: AppStrings.save,
+                    onPressed: () async {
+                      final title = titleController.text.trim();
+                      if (title.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Informe um nome para continuar.'),
+                          ),
+                        );
+                        return;
+                      }
 
-                        if (selectedType == _CreationType.habit) {
-                          await dataProvider.addHabit(
-                            Habit(
-                              id: '',
-                              userId: '',
-                              title: title,
-                              frequency: const ['daily'],
-                              currentStreak: 0,
-                              isCompletedToday: false,
-                            ),
-                          );
-                        } else {
-                          await dataProvider.addRoutine(
-                            Routine(
-                              id: '',
-                              userId: '',
-                              title: title,
-                              icon: '',
-                              triggerTime: '',
-                              steps: const [],
-                            ),
-                          );
-                        }
+                      if (selectedType == _CreationType.habit) {
+                        await dataProvider.addHabit(
+                          Habit(
+                            id: '',
+                            userId: '',
+                            title: title,
+                            frequency: const ['daily'],
+                            currentStreak: 0,
+                            isCompletedToday: false,
+                          ),
+                        );
+                      } else {
+                        await dataProvider.addRoutine(
+                          Routine(
+                            id: '',
+                            userId: '',
+                            title: title,
+                            icon: '',
+                            triggerTime: '',
+                            steps: const [],
+                          ),
+                        );
+                      }
 
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      child: const Text('Salvar'),
-                    ),
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
                   ),
                 ],
               ),
@@ -170,38 +171,15 @@ class _MainScreenState extends State<MainScreen> {
     required IconData icon,
     required String title,
     required String message,
+    required String actionLabel,
+    required VoidCallback onAction,
   }) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: AppSizes.iconEmptyState,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
-            ),
-            const SizedBox(height: AppSpacing.page),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return EmptyStateWidget(
+      icon: icon,
+      title: title,
+      description: message,
+      actionLabel: actionLabel,
+      onAction: onAction,
     );
   }
 
@@ -221,6 +199,10 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icons.self_improvement,
             title: 'Sem hábitos por enquanto.',
             message: 'Comece criando seu primeiro hábito diário.',
+            actionLabel: AppStrings.createHabit,
+            onAction: () => _showCreateModal(
+              initialType: _CreationType.habit,
+            ),
           );
         }
 
@@ -232,7 +214,7 @@ class _MainScreenState extends State<MainScreen> {
             final habit = habits[index];
             final isCompleted = habit.isCompletedToday;
 
-            return NeuroCard(
+            return AppCard(
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 250),
                 opacity: isCompleted ? 0.7 : 1,
@@ -271,15 +253,18 @@ class _MainScreenState extends State<MainScreen> {
                                 borderRadius:
                                     BorderRadius.circular(AppRadii.sm),
                               ),
-                              child: const Row(
+                              child: Row(
                                 children: [
-                                  Icon(Icons.check_circle, size: AppSizes.iconSmall),
-                                  SizedBox(width: AppSpacing.sm),
-                                  Text('Feito'),
+                                  const Icon(
+                                    Icons.check_circle,
+                                    size: AppSizes.iconSmall,
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Text(AppStrings.done),
                                 ],
                               ),
                             )
-                          : ElevatedButton(
+                          : AppPrimaryButton(
                               key: const ValueKey('check'),
                               onPressed: () async {
                                 await context
@@ -289,7 +274,8 @@ class _MainScreenState extends State<MainScreen> {
                                       isCompletedToday: true,
                                     );
                               },
-                              child: const Text('Check'),
+                              label: AppStrings.check,
+                              isFullWidth: false,
                             ),
                     ),
                   ],
@@ -318,6 +304,10 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icons.nights_stay_outlined,
             title: 'Sem rotinas por enquanto.',
             message: 'Crie uma rotina para manter o foco no dia.',
+            actionLabel: AppStrings.createRoutine,
+            onAction: () => _showCreateModal(
+              initialType: _CreationType.routine,
+            ),
           );
         }
 
@@ -327,7 +317,7 @@ class _MainScreenState extends State<MainScreen> {
           separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
           itemBuilder: (context, index) {
             final routine = routines[index];
-            return NeuroCard(
+            return AppCard(
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -378,6 +368,8 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icons.emoji_events_outlined,
             title: 'Sem metas por enquanto.',
             message: 'Defina uma meta e acompanhe seu progresso.',
+            actionLabel: AppStrings.createGoal,
+            onAction: _showGoalWizard,
           );
         }
 
@@ -395,7 +387,7 @@ class _MainScreenState extends State<MainScreen> {
                 ? 0.0
                 : completedMilestones / totalMilestones;
 
-            return NeuroCard(
+            return AppCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -413,16 +405,7 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: AppSizes.progressHeight,
-                      backgroundColor:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.12),
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
+                  AppProgressBar(value: progress),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     '$completedMilestones de $totalMilestones milestones concluídas',
@@ -501,7 +484,7 @@ class _MainScreenState extends State<MainScreen> {
     if (user == null) {
       return Padding(
         padding: const EdgeInsets.all(AppSpacing.page),
-        child: NeuroCard(
+        child: AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -519,32 +502,28 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.page),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    try {
-                      await authService.signInWithGoogle();
-                    } on StateError catch (error) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(error.message)),
-                        );
-                      }
-                    } catch (_) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content:
-                                Text('Não foi possível autenticar agora.'),
-                          ),
-                        );
-                      }
+              AppPrimaryButton(
+                label: AppStrings.signInGoogle,
+                icon: const Icon(Icons.login),
+                onPressed: () async {
+                  try {
+                    await authService.signInWithGoogle();
+                  } on StateError catch (error) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error.message)),
+                      );
                     }
-                  },
-                  icon: const Icon(Icons.login),
-                  label: const Text('Entrar com Google'),
-                ),
+                  } catch (_) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Não foi possível autenticar agora.'),
+                        ),
+                      );
+                    }
+                  }
+                },
               ),
             ],
           ),
@@ -554,7 +533,7 @@ class _MainScreenState extends State<MainScreen> {
 
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.page),
-      child: NeuroCard(
+      child: AppCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -572,15 +551,12 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.page),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () async {
-                  await authService.signOut();
-                },
-                icon: const Icon(Icons.logout),
-                label: const Text('Sair'),
-              ),
+            AppSecondaryButton(
+              label: AppStrings.signOut,
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                await authService.signOut();
+              },
             ),
           ],
         ),
@@ -614,6 +590,10 @@ class _MainScreenState extends State<MainScreen> {
           icon: activeTab.icon,
           title: activeTab.label,
           message: 'Em breve você verá seus dados aqui.',
+          actionLabel: AppStrings.createHabit,
+          onAction: () => _showCreateModal(
+            initialType: _CreationType.habit,
+          ),
         );
     }
 
@@ -631,7 +611,11 @@ class _MainScreenState extends State<MainScreen> {
           ? FloatingActionButton.large(
               onPressed: _currentIndex == _goalsTabIndex
                   ? _showGoalWizard
-                  : _showCreateModal,
+                  : () => _showCreateModal(
+                        initialType: _currentIndex == _routinesTabIndex
+                            ? _CreationType.routine
+                            : _CreationType.habit,
+                      ),
               child: const Icon(Icons.add, size: AppSizes.iconFab),
             )
           : null,

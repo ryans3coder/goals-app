@@ -6,7 +6,8 @@ import 'package:provider/provider.dart';
 import '../models/routine.dart';
 import '../services/data_provider.dart';
 import '../theme/app_theme.dart';
-import '../widgets/neuro_button.dart';
+import '../theme/app_strings.dart';
+import '../widgets/app_buttons.dart';
 
 class RoutineDetailScreen extends StatefulWidget {
   const RoutineDetailScreen({super.key, required this.routine});
@@ -161,8 +162,8 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                   ),
                 ),
                 const Spacer(),
-                NeuroButton(
-                  label: 'Voltar',
+                AppPrimaryButton(
+                  label: AppStrings.back,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -235,32 +236,15 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: SizedBox(
-                      height: 56,
-                      child: OutlinedButton(
-                        onPressed: _hasSteps ? _advanceStep : null,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: theme.colorScheme.onSurface,
-                          side: BorderSide(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                            width: 1.5,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
-                        ),
-                        child: const Text('Pular'),
-                      ),
+                    child: AppSecondaryButton(
+                      label: AppStrings.skip,
+                      onPressed: _hasSteps ? _advanceStep : null,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.lg),
                   Expanded(
-                    child: NeuroButton(
-                      label: 'Próximo',
+                    child: AppPrimaryButton(
+                      label: AppStrings.next,
                       onPressed: _hasSteps ? _advanceStep : null,
                     ),
                   ),
