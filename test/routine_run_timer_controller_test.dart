@@ -63,4 +63,28 @@ void main() {
       expect(callbackCalls, 0);
     });
   });
+
+  test('pause mantém remaining e resume continua contagem', () {
+    final controller = RoutineRunTimerController();
+
+    fakeAsync((async) {
+      controller.startStep(0, 4);
+      async.elapse(const Duration(seconds: 2));
+
+      expect(controller.remaining, const Duration(seconds: 2));
+      controller.pause();
+      expect(controller.status, RoutineRunTimerStatus.paused);
+
+      async.elapse(const Duration(seconds: 2));
+      expect(controller.remaining, const Duration(seconds: 2));
+
+      controller.resume();
+      expect(controller.status, RoutineRunTimerStatus.running);
+
+      async.elapse(const Duration(seconds: 1));
+      expect(controller.remaining, const Duration(seconds: 1));
+    });
+
+    controller.dispose();
+  });
 }

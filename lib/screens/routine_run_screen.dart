@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../controllers/routine_run_timer_controller.dart';
 import '../domain/message_bank.dart';
+import '../domain/time_formatter.dart';
 import '../models/habit.dart';
 import '../models/routine.dart';
 import '../models/routine_event.dart';
@@ -322,12 +323,6 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
     );
   }
 
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -379,7 +374,7 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
     final currentTitle = currentStep == null
         ? AppStrings.routineRunNoStepsTitle
         : '${currentHabit?.emoji.isNotEmpty == true ? currentHabit!.emoji : '•'} '
-            '${currentHabit?.title ?? 'Hábito removido'}';
+            '${currentHabit?.title ?? AppStrings.routineRunHabitRemoved}';
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -434,7 +429,9 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
                   child: Text(
                     _timerController.remaining == null
                         ? '--:--'
-                        : _formatDuration(_timerController.remaining!),
+                        : formatDurationMinutesSeconds(
+                            _timerController.remaining!,
+                          ),
                     style: theme.textTheme.displayLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: theme.colorScheme.onSurface,
