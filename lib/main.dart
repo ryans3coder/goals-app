@@ -29,7 +29,7 @@ class NeuroSyncApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<AuthService>(create: (_) => AuthService()),
-        Provider<DataProvider>(create: (_) => DataProvider()),
+        ChangeNotifierProvider<DataProvider>(create: (_) => DataProvider()),
         StreamProvider<firebase_auth.User?>(
           create: (context) => context.read<AuthService>().authStateChanges,
           initialData: null,
