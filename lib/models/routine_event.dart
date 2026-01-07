@@ -11,6 +11,7 @@ class RoutineEvent {
     required this.type,
     required this.routineId,
     required this.timestamp,
+    this.executionId,
     this.habitId,
     this.stepIndex,
     this.metadata,
@@ -19,6 +20,7 @@ class RoutineEvent {
   final String id;
   final RoutineEventType type;
   final String routineId;
+  final String? executionId;
   final String? habitId;
   final DateTime timestamp;
   final int? stepIndex;
@@ -29,6 +31,7 @@ class RoutineEvent {
       id: (map['id'] as String?) ?? id ?? '',
       type: _parseType(map['type']),
       routineId: (map['routineId'] as String?) ?? '',
+      executionId: _parseExecutionId(map),
       habitId: (map['habitId'] as String?)?.trim(),
       stepIndex: _parseStepIndex(map['stepIndex']),
       metadata: _parseMetadata(map['metadata']),
@@ -41,6 +44,7 @@ class RoutineEvent {
       'id': id,
       'type': _encodeType(type),
       'routineId': routineId,
+      if (executionId != null) 'executionId': executionId,
       if (habitId != null) 'habitId': habitId,
       if (stepIndex != null) 'stepIndex': stepIndex,
       if (metadata != null) 'metadata': metadata,
@@ -88,6 +92,21 @@ class RoutineEvent {
   static Map<String, dynamic>? _parseMetadata(dynamic value) {
     if (value is Map) {
       return Map<String, dynamic>.from(value);
+    }
+    return null;
+  }
+
+  static String? _parseExecutionId(Map<String, dynamic> map) {
+    final executionId = map['executionId'];
+    if (executionId is String && executionId.isNotEmpty) {
+      return executionId;
+    }
+    final metadata = map['metadata'];
+    if (metadata is Map) {
+      final value = metadata['executionId'];
+      if (value is String && value.isNotEmpty) {
+        return value;
+      }
     }
     return null;
   }

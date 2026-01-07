@@ -128,9 +128,10 @@ void main() {
       id: 'event-1',
       type: RoutineEventType.stepCompleted,
       routineId: 'routine-1',
+      executionId: 'run-1',
       habitId: 'habit-1',
       stepIndex: 2,
-      metadata: const {'executionId': 'run-1'},
+      metadata: const {'eventContract': 'step_completed'},
       timestamp: DateTime(2024, 1, 1, 8, 0),
     );
 
@@ -139,9 +140,10 @@ void main() {
     expect(restored.id, event.id);
     expect(restored.type, RoutineEventType.stepCompleted);
     expect(restored.routineId, event.routineId);
+    expect(restored.executionId, event.executionId);
     expect(restored.habitId, event.habitId);
     expect(restored.stepIndex, event.stepIndex);
-    expect(restored.metadata?['executionId'], 'run-1');
+    expect(restored.metadata?['eventContract'], 'step_completed');
     expect(restored.timestamp.year, 2024);
   });
 

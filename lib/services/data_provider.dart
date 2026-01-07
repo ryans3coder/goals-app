@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 import '../data/local/local_persistence.dart';
+import '../data/repositories/local_routine_event_repository.dart';
 import '../domain/habits/habit_category_defaults.dart';
 import '../domain/use_cases/habit_category_use_cases.dart';
 import '../domain/use_cases/goal_use_cases.dart';
@@ -37,6 +38,8 @@ class DataProvider extends ChangeNotifier {
 
   final LocalPersistence _localPersistence;
   final LocalDataStore _localStore;
+  late final LocalRoutineEventRepository _routineEventRepository =
+      LocalRoutineEventRepository(localStore: _localStore);
   final RemoteSyncService _remoteSync;
   final Random _random;
 
@@ -424,18 +427,15 @@ class DataProvider extends ChangeNotifier {
   }) async {
     await _ensureLoaded();
     try {
-      final normalizedMetadata = {
-        ...?metadata,
-        if (executionId != null) 'executionId': executionId,
-      };
-      await _localStore.addRoutineEvent(
+      await _routineEventRepository.addEvent(
         RoutineEvent(
           id: _generateId(),
           type: type,
           routineId: routineId,
+          executionId: executionId,
           habitId: habitId,
           stepIndex: stepIndex,
-          metadata: normalizedMetadata.isEmpty ? null : normalizedMetadata,
+          metadata: metadata,
           timestamp: timestamp ?? DateTime.now(),
         ),
       );
@@ -455,10 +455,6 @@ class DataProvider extends ChangeNotifier {
   }) async {
     await _ensureLoaded();
     try {
-      final normalizedMetadata = {
-        ...?metadata,
-        'executionId': executionId,
-      };
       final dedupeKey = _buildRoutineEventDedupeKey(
         type: type,
         routineId: routineId,
@@ -466,14 +462,15 @@ class DataProvider extends ChangeNotifier {
         stepIndex: stepIndex,
         executionId: executionId,
       );
-      await _localStore.addRoutineEventIfAbsent(
+      await _routineEventRepository.addEventIfAbsent(
         event: RoutineEvent(
           id: _generateId(),
           type: type,
           routineId: routineId,
+          executionId: executionId,
           habitId: habitId,
           stepIndex: stepIndex,
-          metadata: normalizedMetadata,
+          metadata: metadata,
           timestamp: timestamp ?? DateTime.now(),
         ),
         dedupeKey: dedupeKey,
@@ -487,11 +484,11 @@ class DataProvider extends ChangeNotifier {
     required DateTime start,
     required DateTime end,
   }) {
-    return _localStore.loadRoutineEventsByDateRange(start: start, end: end);
+    return _routineEventRepository.fetchByDateRange(start: start, end: end);
   }
 
   List<RoutineEvent> loadRoutineEventsByType(RoutineEventType type) {
-    return _localStore.loadRoutineEventsByType(type);
+    return _routineEventRepository.fetchByType(type);
   }
 
   String _buildRoutineEventDedupeKey({

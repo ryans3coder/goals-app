@@ -272,7 +272,15 @@ class LocalDataStore {
       event.routineId,
       event.habitId ?? '',
       event.stepIndex?.toString() ?? '',
-      event.metadata?['executionId']?.toString() ?? '',
+      _resolveExecutionId(event),
     ].join('|');
+  }
+
+  String _resolveExecutionId(RoutineEvent event) {
+    if (event.executionId != null && event.executionId!.isNotEmpty) {
+      return event.executionId!;
+    }
+    final metadataValue = event.metadata?['executionId'];
+    return metadataValue?.toString() ?? '';
   }
 }
