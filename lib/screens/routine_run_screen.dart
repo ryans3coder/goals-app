@@ -4,14 +4,18 @@ import 'package:meta/meta.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/routine_run_timer_controller.dart';
+import '../domain/message_bank.dart';
 import '../models/habit.dart';
 import '../models/routine.dart';
 import '../models/routine_event.dart';
 import '../models/routine_step.dart';
 import '../services/data_provider.dart';
+import '../services/feedback_manager.dart';
+import '../services/victory_gate.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_buttons.dart';
+import '../widgets/victory_overlay.dart';
 
 class RoutineRunScreen extends StatefulWidget {
   const RoutineRunScreen({super.key, required this.routine});
@@ -34,11 +38,16 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
   late final RoutineRunTimerController _timerController;
   bool _hasAutoStarted = false;
   bool _isHandlingStepChange = false;
+  final VictoryGate _victoryGate = VictoryGate();
+  late final FeedbackManager _feedbackManager;
+  late final MessageBank _messageBank;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _feedbackManager = const FeedbackManager();
+    _messageBank = MessageBank();
     _timerController = RoutineRunTimerController(
       onStepCompleted: () async =>
           _handleStepCompletion(triggeredByTimer: true),
@@ -229,6 +238,40 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
           type: RoutineEventType.routineCompleted,
           routineId: widget.routine.id,
         );
+    await _showVictoryFeedback();
+  }
+
+  Future<void> _showVictoryFeedback() async {
+    if (!_victoryGate.tryOpen()) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+    final dataProvider = context.read<DataProvider>();
+    final message = _messageBank.routineCompletedMessage();
+    final preferences = dataProvider.feedbackPreferences;
+
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: AppStrings.routineRunCompletedTitle,
+      pageBuilder: (context, _, __) => VictoryOverlay(
+        message: message,
+        preferences: preferences,
+        feedbackManager: _feedbackManager,
+        onDismiss: () {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        },
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+    Navigator.of(context).pop();
   }
 
   Future<void> _confirmSkip() async {

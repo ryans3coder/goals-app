@@ -552,6 +552,8 @@ class _MainScreenState extends State<MainScreen> {
     final theme = Theme.of(context);
     final user = context.watch<firebase_auth.User?>();
     final authService = context.read<AuthService>();
+    final dataProvider = context.watch<DataProvider>();
+    final feedbackPreferences = dataProvider.feedbackPreferences;
 
     final sections = <Widget>[];
 
@@ -659,6 +661,60 @@ class _MainScreenState extends State<MainScreen> {
               ),
             );
           },
+        ),
+      ),
+    );
+
+    sections.add(
+      AppCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppStrings.feedbackPreferencesTitle,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              AppStrings.feedbackPreferencesHint,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: const Text(AppStrings.feedbackSoundLabel),
+              value: feedbackPreferences.soundEnabled,
+              onChanged: (value) {
+                dataProvider.updateFeedbackPreferences(
+                  feedbackPreferences.copyWith(soundEnabled: value),
+                );
+              },
+            ),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: const Text(AppStrings.feedbackAnimationsLabel),
+              value: feedbackPreferences.animationsEnabled,
+              onChanged: (value) {
+                dataProvider.updateFeedbackPreferences(
+                  feedbackPreferences.copyWith(animationsEnabled: value),
+                );
+              },
+            ),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: const Text(AppStrings.feedbackHapticLabel),
+              value: feedbackPreferences.hapticEnabled,
+              onChanged: (value) {
+                dataProvider.updateFeedbackPreferences(
+                  feedbackPreferences.copyWith(hapticEnabled: value),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

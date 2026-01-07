@@ -14,6 +14,7 @@ import '../domain/habits/habit_form_options.dart';
 import '../models/goal.dart';
 import '../models/habit.dart';
 import '../models/habit_category.dart';
+import '../models/feedback_preferences.dart';
 import '../models/milestone.dart';
 import '../models/routine.dart';
 import '../models/routine_event.dart';
@@ -61,6 +62,8 @@ class DataProvider extends ChangeNotifier {
   final List<Goal> _goals = [];
   final List<HabitCategory> _categories = [];
   final List<RoutineStep> _routineSteps = [];
+  FeedbackPreferences _feedbackPreferences =
+      FeedbackPreferences.defaults();
 
   late final Future<void> _loadFuture;
   Future<void> _writeQueue = Future.value();
@@ -85,6 +88,7 @@ class DataProvider extends ChangeNotifier {
       _routineSteps
         ..clear()
         ..addAll(await _routineStepUseCases.fetchAll().then(_cloneSteps));
+      _feedbackPreferences = await _localStore.loadFeedbackPreferences();
       _emitAll();
       notifyListeners();
     } catch (error) {
@@ -136,6 +140,7 @@ class DataProvider extends ChangeNotifier {
   }
 
   List<Habit> get habits => List.unmodifiable(_habits.map(_cloneHabit));
+  FeedbackPreferences get feedbackPreferences => _feedbackPreferences;
 
   Future<void> _saveLocalState({
     Future<void> Function()? persist,
@@ -148,6 +153,15 @@ class DataProvider extends ChangeNotifier {
     if (persist != null) {
       await _queuePersist(persist);
     }
+  }
+
+  Future<void> updateFeedbackPreferences(
+    FeedbackPreferences preferences,
+  ) async {
+    _feedbackPreferences = preferences;
+    await _saveLocalState(
+      persist: () => _localStore.saveFeedbackPreferences(preferences),
+    );
   }
 
   Future<void> _queuePersist(Future<void> Function() action) {

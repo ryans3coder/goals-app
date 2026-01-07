@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_application_1/models/habit_category.dart';
 import 'package:flutter_application_1/models/goal.dart';
 import 'package:flutter_application_1/models/habit.dart';
+import 'package:flutter_application_1/models/feedback_preferences.dart';
 import 'package:flutter_application_1/models/milestone.dart';
 import 'package:flutter_application_1/models/routine.dart';
 import 'package:flutter_application_1/models/routine_event.dart';
@@ -138,5 +139,19 @@ void main() {
     expect(restored.routineId, event.routineId);
     expect(restored.habitId, event.habitId);
     expect(restored.timestamp.year, 2024);
+  });
+
+  test('feedback preferences serializes', () {
+    const preferences = FeedbackPreferences(
+      soundEnabled: false,
+      animationsEnabled: true,
+      hapticEnabled: false,
+    );
+
+    final restored = FeedbackPreferences.fromMap(preferences.toMap());
+
+    expect(restored.soundEnabled, isFalse);
+    expect(restored.animationsEnabled, isTrue);
+    expect(restored.hapticEnabled, isFalse);
   });
 }

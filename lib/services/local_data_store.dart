@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/goal.dart';
 import '../models/habit.dart';
+import '../models/feedback_preferences.dart';
 import '../models/routine.dart';
 import '../models/routine_event.dart';
 
@@ -28,6 +29,7 @@ class LocalDataStore {
   static const _goalsKey = 'local_goals';
   static const _routineHistoryKey = 'local_routine_history';
   static const _routineEventsKey = 'local_routine_events';
+  static const _feedbackPreferencesKey = 'feedback_preferences';
 
   final SharedPreferences? _preferences;
   SharedPreferences? _resolvedPreferences;
@@ -113,6 +115,35 @@ class LocalDataStore {
     await preferences.setString(
       _routineEventsKey,
       jsonEncode(events.map((item) => item.toMap()).toList()),
+    );
+  }
+
+  Future<FeedbackPreferences> loadFeedbackPreferences() async {
+    final preferences = await _getPreferences();
+    final raw = preferences.getString(_feedbackPreferencesKey);
+    if (raw == null || raw.isEmpty) {
+      final defaults = FeedbackPreferences.defaults();
+      await saveFeedbackPreferences(defaults);
+      return defaults;
+    }
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        return FeedbackPreferences.fromMap(
+          Map<String, dynamic>.from(decoded),
+        );
+      }
+    } catch (_) {}
+    final fallback = FeedbackPreferences.defaults();
+    await saveFeedbackPreferences(fallback);
+    return fallback;
+  }
+
+  Future<void> saveFeedbackPreferences(FeedbackPreferences preferences) async {
+    final storage = await _getPreferences();
+    await storage.setString(
+      _feedbackPreferencesKey,
+      jsonEncode(preferences.toMap()),
     );
   }
 
