@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/goal.dart';
 import '../models/habit.dart';
 import '../models/routine.dart';
+import '../models/routine_event.dart';
 
 class LocalSnapshot {
   const LocalSnapshot({
@@ -26,6 +27,7 @@ class LocalDataStore {
   static const _routinesKey = 'local_routines';
   static const _goalsKey = 'local_goals';
   static const _routineHistoryKey = 'local_routine_history';
+  static const _routineEventsKey = 'local_routine_events';
 
   final SharedPreferences? _preferences;
   SharedPreferences? _resolvedPreferences;
@@ -100,6 +102,25 @@ class LocalDataStore {
     await preferences.setString(_routineHistoryKey, jsonEncode(historyList));
   }
 
+  Future<void> addRoutineEvent(RoutineEvent event) async {
+    final preferences = await _getPreferences();
+    final raw = preferences.getString(_routineEventsKey);
+    final events = _decodeRoutineEvents(raw);
+    if (events.any((item) => item.id == event.id)) {
+      return;
+    }
+    events.add(event);
+    await preferences.setString(
+      _routineEventsKey,
+      jsonEncode(events.map((item) => item.toMap()).toList()),
+    );
+  }
+
+  List<RoutineEvent> loadRoutineEvents() {
+    final raw = _resolvedPreferences?.getString(_routineEventsKey);
+    return _decodeRoutineEvents(raw);
+  }
+
   List<Habit> _decodeHabits(String? raw) {
     if (raw == null || raw.isEmpty) {
       return [];
@@ -148,6 +169,24 @@ class LocalDataStore {
       return decoded
           .whereType<Map>()
           .map((item) => Goal.fromMap(Map<String, dynamic>.from(item)))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  List<RoutineEvent> _decodeRoutineEvents(String? raw) {
+    if (raw == null || raw.isEmpty) {
+      return [];
+    }
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) {
+        return [];
+      }
+      return decoded
+          .whereType<Map>()
+          .map((item) => RoutineEvent.fromMap(Map<String, dynamic>.from(item)))
           .toList();
     } catch (_) {
       return [];

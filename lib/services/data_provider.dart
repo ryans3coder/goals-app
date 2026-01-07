@@ -16,6 +16,7 @@ import '../models/habit.dart';
 import '../models/habit_category.dart';
 import '../models/milestone.dart';
 import '../models/routine.dart';
+import '../models/routine_event.dart';
 import '../models/routine_step.dart';
 import 'local_data_store.dart';
 import 'remote_sync_service.dart';
@@ -392,6 +393,28 @@ class DataProvider extends ChangeNotifier {
       );
     } catch (error) {
       debugPrint('Falha ao salvar histórico da rotina: $error');
+    }
+  }
+
+  Future<void> addRoutineEvent({
+    required RoutineEventType type,
+    required String routineId,
+    String? habitId,
+    DateTime? timestamp,
+  }) async {
+    await _ensureLoaded();
+    try {
+      await _localStore.addRoutineEvent(
+        RoutineEvent(
+          id: _generateId(),
+          type: type,
+          routineId: routineId,
+          habitId: habitId,
+          timestamp: timestamp ?? DateTime.now(),
+        ),
+      );
+    } catch (error) {
+      debugPrint('Falha ao salvar evento da rotina: $error');
     }
   }
 
