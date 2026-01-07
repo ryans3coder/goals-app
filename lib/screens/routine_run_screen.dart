@@ -29,10 +29,15 @@ class RoutineRunScreen extends StatefulWidget {
 
 class _RoutineRunScreenState extends State<RoutineRunScreen>
     with WidgetsBindingObserver {
+  static const String _startedEvent = 'routine_started';
+  static const String _completedEvent = 'routine_completed';
+  static const String _stepCompletedEvent = 'step_completed';
+  static const String _stepSkippedEvent = 'step_skipped';
   int _currentStepIndex = 0;
   bool _isCompleted = false;
   bool _hasStarted = false;
   bool _completionLogged = false;
+  late final String _executionId;
   String? _activeStepId;
   final Set<String> _completedStepIds = {};
   final Set<String> _skippedStepIds = {};
@@ -47,6 +52,7 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _executionId = _generateExecutionId();
     _feedbackManager = const FeedbackManager();
     _messageBank = MessageBank();
     _timerController = RoutineRunTimerController(
@@ -95,9 +101,11 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
       return;
     }
     _hasStarted = true;
-    await context.read<DataProvider>().addRoutineEvent(
+    await context.read<DataProvider>().addRoutineEventIfAbsent(
           type: RoutineEventType.routineStarted,
           routineId: widget.routine.id,
+          executionId: _executionId,
+          metadata: const {'eventContract': _startedEvent},
         );
   }
 
@@ -151,10 +159,16 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
 
       if (!_completedStepIds.contains(currentStep.id)) {
         _completedStepIds.add(currentStep.id);
-        await dataProvider.addRoutineEvent(
+        await dataProvider.addRoutineEventIfAbsent(
           type: RoutineEventType.stepCompleted,
           routineId: widget.routine.id,
+          executionId: _executionId,
           habitId: currentStep.habitId,
+          stepIndex: safeIndex,
+          metadata: {
+            'eventContract': _stepCompletedEvent,
+            'triggeredByTimer': triggeredByTimer,
+          },
         );
       }
 
@@ -191,10 +205,13 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
 
       if (!_skippedStepIds.contains(currentStep.id)) {
         _skippedStepIds.add(currentStep.id);
-        await dataProvider.addRoutineEvent(
+        await dataProvider.addRoutineEventIfAbsent(
           type: RoutineEventType.stepSkipped,
           routineId: widget.routine.id,
+          executionId: _executionId,
           habitId: currentStep.habitId,
+          stepIndex: safeIndex,
+          metadata: const {'eventContract': _stepSkippedEvent},
         );
       }
 
@@ -247,11 +264,18 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
         _isCompleted = true;
       });
     }
-    await context.read<DataProvider>().addRoutineEvent(
+    await context.read<DataProvider>().addRoutineEventIfAbsent(
           type: RoutineEventType.routineCompleted,
           routineId: widget.routine.id,
+          executionId: _executionId,
+          metadata: const {'eventContract': _completedEvent},
         );
     await _showVictoryFeedback();
+  }
+
+  String _generateExecutionId() {
+    final microseconds = DateTime.now().microsecondsSinceEpoch;
+    return 'run-$microseconds-${widget.routine.id}';
   }
 
   Future<void> _showVictoryFeedback() async {
