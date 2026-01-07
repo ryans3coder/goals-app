@@ -8,6 +8,12 @@ class Goal {
     required this.reason,
     required this.deadline,
     required List<Milestone> milestones,
+    this.specific = '',
+    this.measurable = '',
+    this.achievable = '',
+    this.relevant = '',
+    this.timeBound,
+    this.categoryId = '',
   }) : milestones = List.unmodifiable(milestones);
 
   final String id;
@@ -16,6 +22,12 @@ class Goal {
   final String reason;
   final DateTime? deadline;
   final List<Milestone> milestones;
+  final String specific;
+  final String measurable;
+  final String achievable;
+  final String relevant;
+  final DateTime? timeBound;
+  final String categoryId;
 
   factory Goal.fromMap(Map<String, dynamic> map, {String? id}) {
     return Goal(
@@ -25,6 +37,12 @@ class Goal {
       reason: (map['reason'] as String?) ?? '',
       deadline: _parseDateTime(map['deadline']),
       milestones: _parseMilestones(map['milestones']),
+      specific: (map['specific'] as String?) ?? '',
+      measurable: (map['measurable'] as String?) ?? '',
+      achievable: (map['achievable'] as String?) ?? '',
+      relevant: (map['relevant'] as String?) ?? '',
+      timeBound: _parseDateTime(map['timeBound']),
+      categoryId: (map['categoryId'] as String?) ?? '',
     );
   }
 
@@ -40,6 +58,12 @@ class Goal {
       'reason': reason,
       'deadline': deadline?.toIso8601String(),
       'milestones': milestones.map((milestone) => milestone.toMap()).toList(),
+      'specific': specific,
+      'measurable': measurable,
+      'achievable': achievable,
+      'relevant': relevant,
+      'timeBound': timeBound?.toIso8601String(),
+      'categoryId': categoryId,
     };
   }
 

@@ -3,34 +3,60 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import '../data/local/local_persistence.dart';
+import '../domain/use_cases/category_use_cases.dart';
+import '../domain/use_cases/goal_use_cases.dart';
+import '../domain/use_cases/habit_use_cases.dart';
+import '../domain/use_cases/routine_step_use_cases.dart';
+import '../domain/use_cases/routine_use_cases.dart';
+import '../models/category.dart';
 import '../models/goal.dart';
 import '../models/habit.dart';
 import '../models/milestone.dart';
 import '../models/routine.dart';
+import '../models/routine_step.dart';
 import 'local_data_store.dart';
 import 'remote_sync_service.dart';
 
 class DataProvider extends ChangeNotifier {
   DataProvider({
+    LocalPersistence? localPersistence,
     LocalDataStore? localStore,
     RemoteSyncService? remoteSync,
-  })  : _localStore = localStore ?? LocalDataStore(),
+  })  : _localPersistence =
+            localPersistence ?? LocalPersistence(legacyStore: localStore),
+        _localStore = localStore ?? LocalDataStore(),
         _remoteSync = remoteSync ?? NoopRemoteSyncService(),
         _random = Random() {
     _loadFuture = _loadLocalCache();
   }
 
+  final LocalPersistence _localPersistence;
   final LocalDataStore _localStore;
   final RemoteSyncService _remoteSync;
   final Random _random;
 
+  late final HabitUseCases _habitUseCases =
+      HabitUseCases(_localPersistence.habits);
+  late final RoutineUseCases _routineUseCases =
+      RoutineUseCases(_localPersistence.routines);
+  late final RoutineStepUseCases _routineStepUseCases =
+      RoutineStepUseCases(_localPersistence.routineSteps);
+  late final GoalUseCases _goalUseCases =
+      GoalUseCases(_localPersistence.goals);
+  late final CategoryUseCases _categoryUseCases =
+      CategoryUseCases(_localPersistence.categories);
+
   final _habitsController = StreamController<List<Habit>>.broadcast();
   final _routinesController = StreamController<List<Routine>>.broadcast();
   final _goalsController = StreamController<List<Goal>>.broadcast();
+  final _categoriesController = StreamController<List<Category>>.broadcast();
 
   final List<Habit> _habits = [];
   final List<Routine> _routines = [];
   final List<Goal> _goals = [];
+  final List<Category> _categories = [];
+  final List<RoutineStep> _routineSteps = [];
 
   late final Future<void> _loadFuture;
   Future<void> _writeQueue = Future.value();
@@ -38,8 +64,22 @@ class DataProvider extends ChangeNotifier {
 
   Future<void> _loadLocalCache() async {
     try {
-      final snapshot = await _localStore.loadSnapshot();
-      _hydrate(snapshot);
+      await _localPersistence.initialize();
+      _habits
+        ..clear()
+        ..addAll(await _habitUseCases.fetchAll().then(_cloneHabits));
+      _routines
+        ..clear()
+        ..addAll(await _routineUseCases.fetchAll().then(_cloneRoutines));
+      _goals
+        ..clear()
+        ..addAll(await _goalUseCases.fetchAll().then(_cloneGoals));
+      _categories
+        ..clear()
+        ..addAll(await _categoryUseCases.fetchAll().then(_cloneCategories));
+      _routineSteps
+        ..clear()
+        ..addAll(await _routineStepUseCases.fetchAll().then(_cloneSteps));
       _emitAll();
       notifyListeners();
     } catch (error) {
@@ -48,18 +88,6 @@ class DataProvider extends ChangeNotifier {
   }
 
   Future<void> _ensureLoaded() => _loadFuture;
-
-  void _hydrate(LocalSnapshot snapshot) {
-    _habits
-      ..clear()
-      ..addAll(snapshot.habits.map(_cloneHabit));
-    _routines
-      ..clear()
-      ..addAll(snapshot.routines.map(_cloneRoutine));
-    _goals
-      ..clear()
-      ..addAll(snapshot.goals.map(_cloneGoal));
-  }
 
   String _generateId() {
     final timestamp = DateTime.now().microsecondsSinceEpoch;
@@ -71,6 +99,7 @@ class DataProvider extends ChangeNotifier {
     _emitHabits();
     _emitRoutines();
     _emitGoals();
+    _emitCategories();
   }
 
   void _emitHabits() {
@@ -94,22 +123,35 @@ class DataProvider extends ChangeNotifier {
     _goalsController.add(List.unmodifiable(_goals.map(_cloneGoal)));
   }
 
-  Future<void> _saveLocalState() async {
+  void _emitCategories() {
+    if (_categoriesController.isClosed) {
+      return;
+    }
+    _categoriesController.add(List.unmodifiable(_categories.map(_cloneCategory)));
+  }
+
+  Future<void> _saveLocalState({
+    Future<void> Function()? persist,
+  }) async {
     if (_disposed) {
       return;
     }
     _emitAll();
     notifyListeners();
-    await _queuePersist();
+    if (persist != null) {
+      await _queuePersist(persist);
+    }
   }
 
-  Future<void> _queuePersist() {
-    _writeQueue = _writeQueue.then((_) => _persistSnapshot());
+  Future<void> _queuePersist(Future<void> Function() action) {
+    _writeQueue = _writeQueue.then((_) async {
+      try {
+        await action();
+      } catch (error) {
+        debugPrint('Falha ao persistir dados locais: $error');
+      }
+    });
     return _writeQueue;
-  }
-
-  Future<void> _persistSnapshot() async {
-    await _localStore.saveSnapshot(_snapshot());
   }
 
   void _scheduleRemoteSync() {
@@ -133,7 +175,12 @@ class DataProvider extends ChangeNotifier {
       frequency: habit.frequency,
       currentStreak: habit.currentStreak,
       isCompletedToday: habit.isCompletedToday,
+      categoryId: habit.categoryId,
     );
+  }
+
+  List<Habit> _cloneHabits(List<Habit> habits) {
+    return habits.map(_cloneHabit).toList();
   }
 
   Routine _cloneRoutine(Routine routine) {
@@ -144,7 +191,12 @@ class DataProvider extends ChangeNotifier {
       icon: routine.icon,
       triggerTime: routine.triggerTime,
       steps: routine.steps,
+      categoryId: routine.categoryId,
     );
+  }
+
+  List<Routine> _cloneRoutines(List<Routine> routines) {
+    return routines.map(_cloneRoutine).toList();
   }
 
   Milestone _cloneMilestone(Milestone milestone) {
@@ -162,9 +214,46 @@ class DataProvider extends ChangeNotifier {
       reason: goal.reason,
       deadline: goal.deadline,
       milestones: goal.milestones.map(_cloneMilestone).toList(),
+      specific: goal.specific,
+      measurable: goal.measurable,
+      achievable: goal.achievable,
+      relevant: goal.relevant,
+      timeBound: goal.timeBound,
+      categoryId: goal.categoryId,
     );
   }
 
+  List<Goal> _cloneGoals(List<Goal> goals) {
+    return goals.map(_cloneGoal).toList();
+  }
+
+  Category _cloneCategory(Category category) {
+    return Category(
+      id: category.id,
+      userId: category.userId,
+      title: category.title,
+      colorHex: category.colorHex,
+      icon: category.icon,
+    );
+  }
+
+  List<Category> _cloneCategories(List<Category> categories) {
+    return categories.map(_cloneCategory).toList();
+  }
+
+  RoutineStep _cloneRoutineStep(RoutineStep step) {
+    return RoutineStep(
+      id: step.id,
+      routineId: step.routineId,
+      habitId: step.habitId,
+      order: step.order,
+      durationMinutes: step.durationMinutes,
+    );
+  }
+
+  List<RoutineStep> _cloneSteps(List<RoutineStep> steps) {
+    return steps.map(_cloneRoutineStep).toList();
+  }
   Future<void> addHabit(Habit habit) async {
     await _ensureLoaded();
     final habitId = habit.id.isEmpty ? _generateId() : habit.id;
@@ -175,6 +264,7 @@ class DataProvider extends ChangeNotifier {
       frequency: habit.frequency,
       currentStreak: habit.currentStreak,
       isCompletedToday: habit.isCompletedToday,
+      categoryId: habit.categoryId,
     );
 
     final index = _habits.indexWhere((item) => item.id == habitId);
@@ -183,7 +273,9 @@ class DataProvider extends ChangeNotifier {
     } else {
       _habits.add(normalizedHabit);
     }
-    await _saveLocalState();
+    await _saveLocalState(
+      persist: () => _habitUseCases.upsert(normalizedHabit),
+    );
     _scheduleRemoteSync();
   }
 
@@ -207,23 +299,15 @@ class DataProvider extends ChangeNotifier {
     }
 
     final currentHabit = _habits[index];
-    var updatedStreak = currentHabit.currentStreak;
-    if (isCompletedToday && !currentHabit.isCompletedToday) {
-      updatedStreak += 1;
-    } else if (!isCompletedToday && currentHabit.isCompletedToday) {
-      updatedStreak = updatedStreak > 0 ? updatedStreak - 1 : 0;
-    }
-
-    _habits[index] = Habit(
-      id: currentHabit.id,
-      userId: currentHabit.userId,
-      title: currentHabit.title,
-      frequency: currentHabit.frequency,
-      currentStreak: updatedStreak,
+    final updatedHabit = _habitUseCases.updateCompletion(
+      habit: currentHabit,
       isCompletedToday: isCompletedToday,
     );
+    _habits[index] = updatedHabit;
 
-    await _saveLocalState();
+    await _saveLocalState(
+      persist: () => _habitUseCases.upsert(updatedHabit),
+    );
     _scheduleRemoteSync();
   }
 
@@ -237,6 +321,7 @@ class DataProvider extends ChangeNotifier {
       icon: routine.icon,
       triggerTime: routine.triggerTime,
       steps: routine.steps,
+      categoryId: routine.categoryId,
     );
 
     final index = _routines.indexWhere((item) => item.id == routineId);
@@ -245,7 +330,13 @@ class DataProvider extends ChangeNotifier {
     } else {
       _routines.add(normalizedRoutine);
     }
-    await _saveLocalState();
+    await _saveLocalState(
+      persist: () => _routineUseCases.upsert(normalizedRoutine),
+    );
+    await _persistRoutineStepsFromStrings(
+      routineId: normalizedRoutine.id,
+      steps: normalizedRoutine.steps,
+    );
     _scheduleRemoteSync();
   }
 
@@ -260,11 +351,15 @@ class DataProvider extends ChangeNotifier {
     DateTime? completedAt,
   }) async {
     await _ensureLoaded();
-    await _localStore.addRoutineHistory(
-      routine: routine,
-      completedAt: completedAt,
-      historyId: _generateId(),
-    );
+    try {
+      await _localStore.addRoutineHistory(
+        routine: routine,
+        completedAt: completedAt,
+        historyId: _generateId(),
+      );
+    } catch (error) {
+      debugPrint('Falha ao salvar histórico da rotina: $error');
+    }
   }
 
   Future<void> addGoal(Goal goal) async {
@@ -277,6 +372,12 @@ class DataProvider extends ChangeNotifier {
       reason: goal.reason,
       deadline: goal.deadline,
       milestones: goal.milestones.map(_cloneMilestone).toList(),
+      specific: goal.specific,
+      measurable: goal.measurable,
+      achievable: goal.achievable,
+      relevant: goal.relevant,
+      timeBound: goal.timeBound,
+      categoryId: goal.categoryId,
     );
 
     final index = _goals.indexWhere((item) => item.id == goalId);
@@ -285,7 +386,9 @@ class DataProvider extends ChangeNotifier {
     } else {
       _goals.add(normalizedGoal);
     }
-    await _saveLocalState();
+    await _saveLocalState(
+      persist: () => _goalUseCases.upsert(normalizedGoal),
+    );
     _scheduleRemoteSync();
   }
 
@@ -309,17 +412,105 @@ class DataProvider extends ChangeNotifier {
     }
 
     final currentGoal = _goals[index];
-    _goals[index] = Goal(
+    final updatedGoal = Goal(
       id: currentGoal.id,
       userId: currentGoal.userId,
       title: currentGoal.title,
       reason: currentGoal.reason,
       deadline: currentGoal.deadline,
       milestones: goal.milestones.map(_cloneMilestone).toList(),
+      specific: currentGoal.specific,
+      measurable: currentGoal.measurable,
+      achievable: currentGoal.achievable,
+      relevant: currentGoal.relevant,
+      timeBound: currentGoal.timeBound,
+      categoryId: currentGoal.categoryId,
+    );
+    _goals[index] = updatedGoal;
+
+    await _saveLocalState(
+      persist: () => _goalUseCases.upsert(updatedGoal),
+    );
+    _scheduleRemoteSync();
+  }
+
+  Stream<List<Category>> watchCategories() async* {
+    await _ensureLoaded();
+    yield List.unmodifiable(_categories.map(_cloneCategory));
+    yield* _categoriesController.stream;
+  }
+
+  Future<void> addCategory(Category category) async {
+    await _ensureLoaded();
+    final categoryId = category.id.isEmpty ? _generateId() : category.id;
+    final normalizedCategory = Category(
+      id: categoryId,
+      userId: category.userId.isEmpty ? 'local' : category.userId,
+      title: category.title,
+      colorHex: category.colorHex,
+      icon: category.icon,
     );
 
-    await _saveLocalState();
-    _scheduleRemoteSync();
+    final index = _categories.indexWhere((item) => item.id == categoryId);
+    if (index >= 0) {
+      _categories[index] = normalizedCategory;
+    } else {
+      _categories.add(normalizedCategory);
+    }
+
+    await _saveLocalState(
+      persist: () => _categoryUseCases.upsert(normalizedCategory),
+    );
+  }
+
+  Future<void> updateRoutineSteps({
+    required String routineId,
+    required List<RoutineStep> steps,
+  }) async {
+    await _ensureLoaded();
+    await _persistRoutineSteps(routineId: routineId, steps: steps);
+  }
+
+  Future<void> _persistRoutineSteps({
+    required String routineId,
+    required List<RoutineStep> steps,
+  }) async {
+    final preparedSteps = <RoutineStep>[];
+    preparedSteps.addAll(steps);
+
+    _routineSteps
+      ..removeWhere((item) => item.routineId == routineId)
+      ..addAll(preparedSteps.map(_cloneRoutineStep));
+
+    await _saveLocalState(
+      persist: () async {
+        await _routineStepUseCases.deleteByRoutineId(routineId);
+        if (preparedSteps.isNotEmpty) {
+          await _routineStepUseCases.upsertAll(preparedSteps);
+        }
+      },
+    );
+  }
+
+  Future<void> _persistRoutineStepsFromStrings({
+    required String routineId,
+    required List<String> steps,
+  }) async {
+    final preparedSteps = <RoutineStep>[];
+    if (steps.isNotEmpty) {
+      for (int index = 0; index < steps.length; index++) {
+        preparedSteps.add(
+          RoutineStep(
+            id: _generateId(),
+            routineId: routineId,
+            habitId: steps[index],
+            order: index,
+            durationMinutes: 0,
+          ),
+        );
+      }
+    }
+    await _persistRoutineSteps(routineId: routineId, steps: preparedSteps);
   }
 
   @override
@@ -328,6 +519,7 @@ class DataProvider extends ChangeNotifier {
     _habitsController.close();
     _routinesController.close();
     _goalsController.close();
+    _categoriesController.close();
     super.dispose();
   }
 }

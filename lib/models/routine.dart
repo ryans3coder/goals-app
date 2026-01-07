@@ -6,6 +6,7 @@ class Routine {
     required this.icon,
     required this.triggerTime,
     required List<String> steps,
+    this.categoryId = '',
   }) : steps = List.unmodifiable(steps);
 
   final String id;
@@ -14,6 +15,7 @@ class Routine {
   final String icon;
   final String triggerTime;
   final List<String> steps;
+  final String categoryId;
 
   factory Routine.fromMap(Map<String, dynamic> map, {String? id}) {
     return Routine(
@@ -23,6 +25,7 @@ class Routine {
       icon: (map['icon'] as String?) ?? '',
       triggerTime: (map['triggerTime'] as String?) ?? '',
       steps: _parseSteps(map['steps']),
+      categoryId: (map['categoryId'] as String?) ?? '',
     );
   }
 
@@ -38,6 +41,7 @@ class Routine {
       'icon': icon,
       'triggerTime': triggerTime,
       'steps': steps,
+      'categoryId': categoryId,
     };
   }
 

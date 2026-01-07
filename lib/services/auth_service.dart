@@ -3,14 +3,19 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
-  AuthService({FirebaseAuth? firebaseAuth, GoogleSignIn? googleSignIn})
-      : _firebaseAuth = firebaseAuth ?? _tryGetFirebaseAuth(),
+  AuthService({
+    FirebaseAuth? firebaseAuth,
+    GoogleSignIn? googleSignIn,
+    Future<void>? firebaseInitialization,
+  })  : _firebaseInitialization = firebaseInitialization ?? Future.value(),
+        _firebaseAuth = firebaseAuth,
         _googleSignIn = googleSignIn ?? GoogleSignIn();
 
-  final FirebaseAuth? _firebaseAuth;
+  final Future<void> _firebaseInitialization;
+  FirebaseAuth? _firebaseAuth;
   final GoogleSignIn _googleSignIn;
 
-  User? get currentUser => _firebaseAuth?.currentUser;
+  User? get currentUser => _getFirebaseAuth()?.currentUser;
 
   static FirebaseAuth? _tryGetFirebaseAuth() {
     try {
@@ -21,11 +26,32 @@ class AuthService {
     }
   }
 
-  Stream<User?> get authStateChanges =>
-      _firebaseAuth?.authStateChanges() ?? Stream<User?>.value(null);
+  FirebaseAuth? _getFirebaseAuth() {
+    _firebaseAuth ??= _tryGetFirebaseAuth();
+    return _firebaseAuth;
+  }
+
+  Future<void> _ensureFirebaseReady() async {
+    try {
+      await _firebaseInitialization;
+    } catch (error) {
+      debugPrint('Firebase indisponível: $error');
+    }
+  }
+
+  Stream<User?> get authStateChanges async* {
+    await _ensureFirebaseReady();
+    final firebaseAuth = _getFirebaseAuth();
+    if (firebaseAuth == null) {
+      yield null;
+      return;
+    }
+    yield* firebaseAuth.authStateChanges();
+  }
 
   Future<UserCredential> signInWithGoogle() async {
-    final firebaseAuth = _firebaseAuth;
+    await _ensureFirebaseReady();
+    final firebaseAuth = _getFirebaseAuth();
     if (firebaseAuth == null) {
       throw StateError('Firebase indisponível. Tente novamente mais tarde.');
     }
@@ -44,6 +70,7 @@ class AuthService {
   }
 
   Future<void> signOut() async {
+    await _ensureFirebaseReady();
     final firebaseSignOut =
         _firebaseAuth != null ? _firebaseAuth!.signOut() : Future<void>.value();
     await Future.wait([
