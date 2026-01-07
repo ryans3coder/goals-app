@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../services/auth_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/neuro_button.dart';
 import '../widgets/neuro_card.dart';
 
@@ -50,6 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       body: Center(
         child: Padding(
@@ -60,8 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Text(
                   'NeuroSync',
-                  style: GoogleFonts.inter(
-                    fontSize: 28,
+                  style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -69,9 +69,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'Organize hábitos, rotinas e metas com ciência comportamental.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: Colors.white70,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppTheme.mutedText,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -85,9 +84,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
                   Text(
                     _errorMessage!,
-                    style: GoogleFonts.inter(
-                      color: Colors.redAccent,
-                      fontSize: 12,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
                     ),
                     textAlign: TextAlign.center,
                   ),
