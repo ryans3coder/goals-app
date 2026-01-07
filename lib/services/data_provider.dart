@@ -161,9 +161,9 @@ class DataProvider extends ChangeNotifier {
     return _writeQueue;
   }
 
-  void _scheduleRemoteSync() {
+  Future<void> _scheduleRemoteSync() async {
     final snapshot = _snapshot();
-    unawaited(_remoteSync.enqueueSync(snapshot));
+    await _remoteSync.enqueueSync(snapshot);
   }
 
   LocalSnapshot _snapshot() {
@@ -298,7 +298,7 @@ class DataProvider extends ChangeNotifier {
     await _saveLocalState(
       persist: () => _habitUseCases.upsert(normalizedHabit),
     );
-    _scheduleRemoteSync();
+    await _scheduleRemoteSync();
   }
 
   Future<void> deleteHabit(Habit habit) async {
@@ -310,7 +310,7 @@ class DataProvider extends ChangeNotifier {
     await _saveLocalState(
       persist: () => _habitUseCases.deleteById(habit.id),
     );
-    _scheduleRemoteSync();
+    await _scheduleRemoteSync();
   }
 
   Stream<List<Habit>> watchHabits() async* {
@@ -342,7 +342,7 @@ class DataProvider extends ChangeNotifier {
     await _saveLocalState(
       persist: () => _habitUseCases.upsert(updatedHabit),
     );
-    _scheduleRemoteSync();
+    await _scheduleRemoteSync();
   }
 
   Future<void> addRoutine(Routine routine) async {
@@ -371,7 +371,7 @@ class DataProvider extends ChangeNotifier {
       routineId: normalizedRoutine.id,
       steps: normalizedRoutine.steps,
     );
-    _scheduleRemoteSync();
+    await _scheduleRemoteSync();
   }
 
   Stream<List<Routine>> watchRoutines() async* {
@@ -445,7 +445,7 @@ class DataProvider extends ChangeNotifier {
     await _saveLocalState(
       persist: () => _goalUseCases.upsert(normalizedGoal),
     );
-    _scheduleRemoteSync();
+    await _scheduleRemoteSync();
   }
 
   Stream<List<Goal>> watchGoals() async* {
@@ -487,7 +487,7 @@ class DataProvider extends ChangeNotifier {
     await _saveLocalState(
       persist: () => _goalUseCases.upsert(updatedGoal),
     );
-    _scheduleRemoteSync();
+    await _scheduleRemoteSync();
   }
 
   List<HabitCategory> get categories =>
@@ -580,7 +580,7 @@ class DataProvider extends ChangeNotifier {
       },
     );
 
-    _scheduleRemoteSync();
+    await _scheduleRemoteSync();
   }
 
   Future<void> updateRoutineSteps({
