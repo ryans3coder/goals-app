@@ -89,6 +89,9 @@ class DataProvider extends ChangeNotifier {
         ..clear()
         ..addAll(await _routineStepUseCases.fetchAll().then(_cloneSteps));
       _feedbackPreferences = await _localStore.loadFeedbackPreferences();
+      if (_disposed) {
+        return;
+      }
       _emitAll();
       notifyListeners();
     } catch (error) {

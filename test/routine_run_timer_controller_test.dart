@@ -45,4 +45,22 @@ void main() {
 
     controller.dispose();
   });
+
+  test('dispose cancela timer e evita callback após descarte', () {
+    var callbackCalls = 0;
+    final controller = RoutineRunTimerController(
+      onStepCompleted: () async {
+        callbackCalls += 1;
+      },
+    );
+
+    fakeAsync((async) {
+      controller.startStep(0, 1);
+      controller.dispose();
+
+      async.elapse(const Duration(seconds: 2));
+
+      expect(callbackCalls, 0);
+    });
+  });
 }

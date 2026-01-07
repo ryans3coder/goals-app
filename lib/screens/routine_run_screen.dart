@@ -90,6 +90,9 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
     if (_hasStarted) {
       return;
     }
+    if (!mounted) {
+      return;
+    }
     _hasStarted = true;
     await context.read<DataProvider>().addRoutineEvent(
           type: RoutineEventType.routineStarted,
@@ -124,6 +127,9 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
   }
 
   Future<void> _handleStepCompletion({bool triggeredByTimer = false}) async {
+    if (!mounted) {
+      return;
+    }
     if (_isHandlingStepChange) {
       return;
     }
@@ -162,6 +168,9 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
   }
 
   Future<void> _handleStepSkip() async {
+    if (!mounted) {
+      return;
+    }
     if (_isHandlingStepChange) {
       return;
     }
@@ -224,6 +233,9 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
   }
 
   Future<void> _completeRoutine() async {
+    if (!mounted) {
+      return;
+    }
     if (_completionLogged) {
       return;
     }
@@ -293,12 +305,18 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
       ),
     );
 
+    if (!mounted) {
+      return;
+    }
     if (result == true) {
       await _handleStepSkip();
     }
   }
 
   void _showSnack(String message) {
+    if (!mounted) {
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
