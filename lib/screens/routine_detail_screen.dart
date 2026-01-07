@@ -63,121 +63,124 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
           borderRadius: BorderRadius.circular(AppSpacing.lg),
         ),
         builder: (context) {
-          return Padding(
-            padding: EdgeInsets.only(
-              left: AppSpacing.xl,
-              right: AppSpacing.xl,
-              top: AppSpacing.xl,
-              bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
-            ),
-            child: StatefulBuilder(
-              builder: (context, setModalState) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Adicionar passo',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    DropdownButtonFormField<String>(
-                      value: selectedHabitId,
-                      items: habits
-                          .map(
-                            (habit) => DropdownMenuItem<String>(
-                              value: habit.id,
-                              child: Text(
-                                '${habit.emoji.isEmpty ? '•' : habit.emoji} '
-                                '${habit.title}',
+          return StatefulBuilder(
+            builder: (context, setModalState) {
+              return SafeArea(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    left: AppSpacing.xl,
+                    right: AppSpacing.xl,
+                    top: AppSpacing.xl,
+                    bottom:
+                        MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Adicionar passo',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      DropdownButtonFormField<String>(
+                        value: selectedHabitId,
+                        items: habits
+                            .map(
+                              (habit) => DropdownMenuItem<String>(
+                                value: habit.id,
+                                child: Text(
+                                  '${habit.emoji.isEmpty ? '•' : habit.emoji} '
+                                  '${habit.title}',
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          setModalState(() => selectedHabitId = value);
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Selecione o hábito',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: minutesController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Minutos',
+                                border: OutlineInputBorder(),
                               ),
                             ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setModalState(() => selectedHabitId = value);
-                      },
-                      decoration: const InputDecoration(
-                        labelText: 'Selecione o hábito',
-                        border: OutlineInputBorder(),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: TextField(
+                              controller: secondsController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Segundos',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: minutesController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Minutos',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.lg),
-                        Expanded(
-                          child: TextField(
-                            controller: secondsController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Segundos',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    AppPrimaryButton(
-                      label: AppStrings.save,
-                      onPressed: () async {
-                        final minutes =
-                            int.tryParse(minutesController.text.trim()) ?? 0;
-                        final seconds =
-                            int.tryParse(secondsController.text.trim()) ?? 0;
-                        final totalSeconds = (minutes * 60) + seconds;
+                      const SizedBox(height: AppSpacing.lg),
+                      AppPrimaryButton(
+                        label: AppStrings.save,
+                        onPressed: () async {
+                          final minutes =
+                              int.tryParse(minutesController.text.trim()) ?? 0;
+                          final seconds =
+                              int.tryParse(secondsController.text.trim()) ?? 0;
+                          final totalSeconds = (minutes * 60) + seconds;
 
-                        if (selectedHabitId == null ||
-                            selectedHabitId!.isEmpty) {
-                          _showSnack('Selecione um hábito.');
-                          return;
-                        }
-                        if (totalSeconds <= 0) {
-                          _showSnack('Informe uma duração válida.');
-                          return;
-                        }
-                        if (existingSteps.any(
-                          (step) => step.habitId == selectedHabitId,
-                        )) {
-                          _showSnack('Este hábito já está na rotina.');
-                          return;
-                        }
+                          if (selectedHabitId == null ||
+                              selectedHabitId!.isEmpty) {
+                            _showSnack('Selecione um hábito.');
+                            return;
+                          }
+                          if (totalSeconds <= 0) {
+                            _showSnack('Informe uma duração válida.');
+                            return;
+                          }
+                          if (existingSteps.any(
+                            (step) => step.habitId == selectedHabitId,
+                          )) {
+                            _showSnack('Este hábito já está na rotina.');
+                            return;
+                          }
 
-                        final added = await context
-                            .read<DataProvider>()
-                            .addRoutineStep(
-                              routineId: widget.routine.id,
-                              habitId: selectedHabitId!,
-                              durationSeconds: totalSeconds,
-                            );
+                          final added = await context
+                              .read<DataProvider>()
+                              .addRoutineStep(
+                                routineId: widget.routine.id,
+                                habitId: selectedHabitId!,
+                                durationSeconds: totalSeconds,
+                              );
 
-                        if (!added) {
-                          _showSnack('Não foi possível adicionar o passo.');
-                          return;
-                        }
+                          if (!added) {
+                            _showSnack('Não foi possível adicionar o passo.');
+                            return;
+                          }
 
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                    ),
-                  ],
-                );
-              },
-            ),
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           );
         },
       );
@@ -201,81 +204,84 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
           borderRadius: BorderRadius.circular(AppSpacing.lg),
         ),
         builder: (context) {
-          return Padding(
-            padding: EdgeInsets.only(
-              left: AppSpacing.xl,
-              right: AppSpacing.xl,
-              top: AppSpacing.xl,
-              bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Editar duração',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: minutesController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Minutos',
-                          border: OutlineInputBorder(),
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: AppSpacing.xl,
+                right: AppSpacing.xl,
+                top: AppSpacing.xl,
+                bottom:
+                    MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Editar duração',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: minutesController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Minutos',
+                            border: OutlineInputBorder(),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: AppSpacing.lg),
-                    Expanded(
-                      child: TextField(
-                        controller: secondsController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Segundos',
-                          border: OutlineInputBorder(),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(
+                        child: TextField(
+                          controller: secondsController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Segundos',
+                            border: OutlineInputBorder(),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                AppPrimaryButton(
-                  label: AppStrings.save,
-                  onPressed: () async {
-                    final minutes =
-                        int.tryParse(minutesController.text.trim()) ?? 0;
-                    final seconds =
-                        int.tryParse(secondsController.text.trim()) ?? 0;
-                    final totalSeconds = (minutes * 60) + seconds;
-                    if (totalSeconds <= 0) {
-                      _showSnack('Informe uma duração válida.');
-                      return;
-                    }
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  AppPrimaryButton(
+                    label: AppStrings.save,
+                    onPressed: () async {
+                      final minutes =
+                          int.tryParse(minutesController.text.trim()) ?? 0;
+                      final seconds =
+                          int.tryParse(secondsController.text.trim()) ?? 0;
+                      final totalSeconds = (minutes * 60) + seconds;
+                      if (totalSeconds <= 0) {
+                        _showSnack('Informe uma duração válida.');
+                        return;
+                      }
 
-                    final updated = await context
-                        .read<DataProvider>()
-                        .updateRoutineStepDuration(
-                          step: step,
-                          durationSeconds: totalSeconds,
-                        );
+                      final updated = await context
+                          .read<DataProvider>()
+                          .updateRoutineStepDuration(
+                            step: step,
+                            durationSeconds: totalSeconds,
+                          );
 
-                    if (!updated) {
-                      _showSnack(AppStrings.routineStepDurationUpdateError);
-                      return;
-                    }
+                      if (!updated) {
+                        _showSnack(AppStrings.routineStepDurationUpdateError);
+                        return;
+                      }
 
-                    if (context.mounted) {
-                      Navigator.of(context).pop();
-                    }
-                  },
-                ),
-              ],
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -487,46 +493,46 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                       ),
               ),
             ),
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
-                  AppSpacing.md,
-                  AppSpacing.xl,
-                  AppSpacing.xl,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    AppSecondaryButton(
-                      label: 'Adicionar passo',
-                      onPressed: () => _showAddStepSheet(
-                        habits: habits,
-                        existingSteps: steps,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    AppPrimaryButton(
-                      label: AppStrings.routineRunStartAction,
-                      onPressed: () => _openRunMode(steps),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      hasSteps
-                          ? 'Passos configurados: ${steps.length}'
-                          : AppStrings.routineRunNoStepsTitle,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ],
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.md,
+            AppSpacing.xl,
+            AppSpacing.xl,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppSecondaryButton(
+                label: 'Adicionar passo',
+                onPressed: () => _showAddStepSheet(
+                  habits: habits,
+                  existingSteps: steps,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.md),
+              AppPrimaryButton(
+                label: AppStrings.routineRunStartAction,
+                onPressed: () => _openRunMode(steps),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                hasSteps
+                    ? 'Passos configurados: ${steps.length}'
+                    : AppStrings.routineRunNoStepsTitle,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

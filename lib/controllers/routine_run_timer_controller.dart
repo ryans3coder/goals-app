@@ -19,12 +19,16 @@ class RoutineRunTimerController extends ChangeNotifier {
   Duration? _remaining;
   RoutineRunTimerStatus _status = RoutineRunTimerStatus.idle;
   int _currentStepIndex = 0;
+  bool _isDisposed = false;
 
   RoutineRunTimerStatus get status => _status;
   Duration? get remaining => _remaining;
   int get currentStepIndex => _currentStepIndex;
 
   void startStep(int index, int durationSeconds) {
+    if (_isDisposed) {
+      return;
+    }
     _cancelTimer();
     _currentStepIndex = index;
     _remaining = Duration(seconds: durationSeconds);
@@ -39,6 +43,9 @@ class RoutineRunTimerController extends ChangeNotifier {
   }
 
   void pause() {
+    if (_isDisposed) {
+      return;
+    }
     if (_status != RoutineRunTimerStatus.running) {
       return;
     }
@@ -48,6 +55,9 @@ class RoutineRunTimerController extends ChangeNotifier {
   }
 
   void resume() {
+    if (_isDisposed) {
+      return;
+    }
     if (_status == RoutineRunTimerStatus.running) {
       return;
     }
@@ -60,12 +70,18 @@ class RoutineRunTimerController extends ChangeNotifier {
   }
 
   void markCompleted() {
+    if (_isDisposed) {
+      return;
+    }
     _cancelTimer();
     _status = RoutineRunTimerStatus.completed;
     notifyListeners();
   }
 
   void reset() {
+    if (_isDisposed) {
+      return;
+    }
     _cancelTimer();
     _remaining = null;
     _status = RoutineRunTimerStatus.idle;
@@ -74,6 +90,10 @@ class RoutineRunTimerController extends ChangeNotifier {
   }
 
   Future<void> _handleTick(Timer timer) async {
+    if (_isDisposed) {
+      timer.cancel();
+      return;
+    }
     if (_remaining == null) {
       timer.cancel();
       return;
@@ -81,15 +101,19 @@ class RoutineRunTimerController extends ChangeNotifier {
     if (_remaining!.inSeconds <= 1) {
       _remaining = Duration.zero;
       _status = RoutineRunTimerStatus.completed;
-      notifyListeners();
+      if (!_isDisposed) {
+        notifyListeners();
+      }
       timer.cancel();
-      if (_onStepCompleted != null) {
+      if (_onStepCompleted != null && !_isDisposed) {
         await _onStepCompleted!.call();
       }
       return;
     }
     _remaining = _remaining! - const Duration(seconds: 1);
-    notifyListeners();
+    if (!_isDisposed) {
+      notifyListeners();
+    }
   }
 
   void _cancelTimer() {
@@ -99,6 +123,10 @@ class RoutineRunTimerController extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_isDisposed) {
+      return;
+    }
+    _isDisposed = true;
     _cancelTimer();
     super.dispose();
   }
