@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
