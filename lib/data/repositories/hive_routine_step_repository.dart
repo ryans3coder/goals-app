@@ -14,9 +14,11 @@ class HiveRoutineStepRepository implements RoutineStepRepository {
 
   @override
   Future<List<RoutineStep>> fetchByRoutineId(String routineId) async {
-    return _database.decodeRoutineSteps().where((step) {
+    final steps = _database.decodeRoutineSteps().where((step) {
       return step.routineId == routineId;
     }).toList();
+    steps.sort((a, b) => a.order.compareTo(b.order));
+    return steps;
   }
 
   @override

@@ -14,6 +14,8 @@ class RoutineStepUseCases {
   Future<void> upsertAll(List<RoutineStep> steps) =>
       _repository.upsertAll(steps);
 
+  Future<void> deleteById(String id) => _repository.deleteById(id);
+
   Future<void> deleteByRoutineId(String routineId) =>
       _repository.deleteByRoutineId(routineId);
 }
