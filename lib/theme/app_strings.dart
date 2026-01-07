@@ -89,6 +89,9 @@ class AppStrings {
   static const String statsStreakRule =
       'Dia considerado de 00:00 a 23:59 no fuso local.';
   static const String statsTotalXpLabel = 'XP total';
+  static const String statsLevelTitle = 'Nível atual';
+  static const String statsLevelLabel = 'Nível';
+  static const String statsLevelNextLabel = 'Próximo nível';
   static const String statsSuccessTitle = 'Taxa de sucesso';
   static const String statsLast7Days = 'Últimos 7 dias';
   static const String statsLast30Days = 'Últimos 30 dias';

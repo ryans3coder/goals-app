@@ -4,11 +4,13 @@ import 'package:provider/provider.dart';
 
 import '../domain/stats/routine_stats_calculator.dart';
 import '../domain/stats/routine_stats_summary.dart';
+import '../domain/stats/level_policy.dart';
 import '../domain/stats/xp_policy.dart';
 import '../services/data_provider.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_card.dart';
+import '../widgets/app_progress_bar.dart';
 import '../widgets/empty_state_widget.dart';
 
 class StatsScreen extends StatefulWidget {
@@ -106,10 +108,77 @@ class _StatsContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dayFormatter = DateFormat('EEE');
+    final levelProgress =
+        const LevelPolicy().progressForXp(summary.totalXp);
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.page),
       children: [
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppStrings.statsLevelTitle,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.statsLevelLabel,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        '${levelProgress.level}',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        AppStrings.statsTotalXpLabel,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        '${summary.totalXp}',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              AppProgressBar(value: levelProgress.progress),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                '${levelProgress.xpIntoLevel}/${levelProgress.xpToNextLevel} ${AppStrings.statsXpUnit} · ${AppStrings.statsLevelNextLabel} ${levelProgress.nextLevel}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
         AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
