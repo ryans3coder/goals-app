@@ -571,6 +571,45 @@ class DataProvider extends ChangeNotifier {
     );
   }
 
+  Future<void> reorderRoutineSteps({
+    required String routineId,
+    required int oldIndex,
+    required int newIndex,
+  }) async {
+    await _ensureLoaded();
+    final steps = _routineSteps
+        .where((item) => item.routineId == routineId)
+        .toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+    if (oldIndex < 0 || oldIndex >= steps.length) {
+      return;
+    }
+    if (newIndex < 0 || newIndex >= steps.length) {
+      return;
+    }
+    if (oldIndex == newIndex) {
+      return;
+    }
+    final moved = steps.removeAt(oldIndex);
+    steps.insert(newIndex, moved);
+    final now = DateTime.now();
+    final reordered = List<RoutineStep>.generate(steps.length, (index) {
+      final step = steps[index];
+      final updatedAt =
+          step.order == index ? step.updatedAt : (step.updatedAt ?? now);
+      return RoutineStep(
+        id: step.id,
+        routineId: step.routineId,
+        habitId: step.habitId,
+        order: index,
+        durationSeconds: step.durationSeconds,
+        createdAt: step.createdAt,
+        updatedAt: updatedAt,
+      );
+    });
+    await _persistRoutineSteps(routineId: routineId, steps: reordered);
+  }
+
   Future<bool> addRoutineStep({
     required String routineId,
     required String habitId,
@@ -661,10 +700,10 @@ class DataProvider extends ChangeNotifier {
 
     await _saveLocalState(
       persist: () async {
-        await _routineStepUseCases.deleteByRoutineId(routineId);
-        if (preparedSteps.isNotEmpty) {
-          await _routineStepUseCases.upsertAll(preparedSteps);
-        }
+        await _routineStepUseCases.replaceByRoutineId(
+          routineId,
+          preparedSteps,
+        );
       },
     );
   }
