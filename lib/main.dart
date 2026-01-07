@@ -1,6 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,31 +5,39 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/main_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/auth_service.dart';
+import 'services/backup_remote_store.dart';
 import 'services/data_provider.dart';
+import 'services/firebase_initializer.dart';
+import 'services/local_data_store.dart';
 import 'services/remote_sync_service.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final firebaseInitialization = Firebase.initializeApp();
-  firebaseInitialization.catchError(
-    (error) => debugPrint('Falha ao inicializar o Firebase: $error'),
-  );
-  runApp(NeuroSyncApp(firebaseInitialization: firebaseInitialization));
+  runApp(const NeuroSyncApp());
 }
 
 class NeuroSyncApp extends StatelessWidget {
-  const NeuroSyncApp({super.key, required this.firebaseInitialization});
-
-  final Future<void> firebaseInitialization;
+  const NeuroSyncApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<FirebaseInitializationService>(
+          create: (_) => FirebaseInitializer(),
+        ),
+        Provider<LocalDataStore>(
+          create: (_) => LocalDataStore(),
+        ),
         Provider<AuthService>(
-          create: (_) => AuthService(
-            firebaseInitialization: firebaseInitialization,
+          create: (context) => AuthService(
+            firebaseInitializer: context.read<FirebaseInitializationService>(),
+          ),
+        ),
+        Provider<BackupRemoteStore>(
+          create: (context) => FirebaseBackupRemoteStore(
+            firebaseInitializer: context.read<FirebaseInitializationService>(),
           ),
         ),
         Provider<RemoteSyncService>(
@@ -42,12 +47,9 @@ class NeuroSyncApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<DataProvider>(
           create: (context) => DataProvider(
+            localStore: context.read<LocalDataStore>(),
             remoteSync: context.read<RemoteSyncService>(),
           ),
-        ),
-        StreamProvider<firebase_auth.User?>(
-          create: (context) => context.read<AuthService>().authStateChanges,
-          initialData: null,
         ),
       ],
       child: MaterialApp(

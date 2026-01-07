@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/goal.dart';
@@ -19,12 +20,9 @@ class NoopRemoteSyncService implements RemoteSyncService {
 class FirebaseRemoteSyncService implements RemoteSyncService {
   FirebaseRemoteSyncService({
     AuthService? authService,
-    FirebaseFirestore? firestore,
-  })  : _authService = authService ?? AuthService(),
-        _firestore = firestore ?? _tryGetFirestore();
+  }) : _authService = authService ?? AuthService();
 
   final AuthService _authService;
-  final FirebaseFirestore? _firestore;
   Future<void> _syncQueue = Future.value();
 
   static FirebaseFirestore? _tryGetFirestore() {
@@ -43,7 +41,10 @@ class FirebaseRemoteSyncService implements RemoteSyncService {
   }
 
   Future<void> _sync(LocalSnapshot snapshot) async {
-    final firestore = _firestore;
+    if (Firebase.apps.isEmpty) {
+      return;
+    }
+    final firestore = _tryGetFirestore();
     final user = _authService.currentUser;
     if (firestore == null || user == null) {
       return;
