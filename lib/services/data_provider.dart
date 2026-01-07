@@ -134,6 +134,8 @@ class DataProvider extends ChangeNotifier {
     _categoriesController.add(List.unmodifiable(_categories.map(_cloneCategory)));
   }
 
+  List<Habit> get habits => List.unmodifiable(_habits.map(_cloneHabit));
+
   Future<void> _saveLocalState({
     Future<void> Function()? persist,
   }) async {
@@ -254,7 +256,9 @@ class DataProvider extends ChangeNotifier {
       routineId: step.routineId,
       habitId: step.habitId,
       order: step.order,
-      durationMinutes: step.durationMinutes,
+      durationSeconds: step.durationSeconds,
+      createdAt: step.createdAt,
+      updatedAt: step.updatedAt,
     );
   }
 
@@ -466,6 +470,15 @@ class DataProvider extends ChangeNotifier {
   List<HabitCategory> get categories =>
       List.unmodifiable(_categories.map(_cloneCategory));
 
+  List<RoutineStep> routineStepsByRoutineId(String routineId) {
+    final steps = _routineSteps
+        .where((item) => item.routineId == routineId)
+        .map(_cloneRoutineStep)
+        .toList();
+    steps.sort((a, b) => a.order.compareTo(b.order));
+    return List.unmodifiable(steps);
+  }
+
   Stream<List<HabitCategory>> watchCategories() async* {
     await _ensureLoaded();
     yield List.unmodifiable(_categories.map(_cloneCategory));
@@ -552,7 +565,87 @@ class DataProvider extends ChangeNotifier {
     required List<RoutineStep> steps,
   }) async {
     await _ensureLoaded();
-    await _persistRoutineSteps(routineId: routineId, steps: steps);
+    await _persistRoutineSteps(
+      routineId: routineId,
+      steps: _normalizeRoutineSteps(steps),
+    );
+  }
+
+  Future<bool> addRoutineStep({
+    required String routineId,
+    required String habitId,
+    required int durationSeconds,
+  }) async {
+    await _ensureLoaded();
+    if (durationSeconds <= 0) {
+      return false;
+    }
+    final existingSteps = _routineSteps
+        .where((item) => item.routineId == routineId)
+        .toList();
+    if (existingSteps.any((item) => item.habitId == habitId)) {
+      return false;
+    }
+    final now = DateTime.now();
+    final nextOrder = existingSteps.isEmpty
+        ? 0
+        : existingSteps.map((step) => step.order).reduce(max) + 1;
+    final newStep = RoutineStep(
+      id: _generateId(),
+      routineId: routineId,
+      habitId: habitId,
+      order: nextOrder,
+      durationSeconds: durationSeconds,
+      createdAt: now,
+      updatedAt: now,
+    );
+    final updatedSteps = _normalizeRoutineSteps([...existingSteps, newStep]);
+    await _persistRoutineSteps(routineId: routineId, steps: updatedSteps);
+    return true;
+  }
+
+  Future<bool> updateRoutineStepDuration({
+    required RoutineStep step,
+    required int durationSeconds,
+  }) async {
+    await _ensureLoaded();
+    if (durationSeconds <= 0) {
+      return false;
+    }
+    final existingSteps = _routineSteps
+        .where((item) => item.routineId == step.routineId)
+        .toList();
+    final index = existingSteps.indexWhere((item) => item.id == step.id);
+    if (index < 0) {
+      return false;
+    }
+    final updated = RoutineStep(
+      id: step.id,
+      routineId: step.routineId,
+      habitId: step.habitId,
+      order: step.order,
+      durationSeconds: durationSeconds,
+      createdAt: step.createdAt,
+      updatedAt: DateTime.now(),
+    );
+    existingSteps[index] = updated;
+    await _persistRoutineSteps(
+      routineId: step.routineId,
+      steps: _normalizeRoutineSteps(existingSteps),
+    );
+    return true;
+  }
+
+  Future<void> deleteRoutineStep(RoutineStep step) async {
+    await _ensureLoaded();
+    final existingSteps = _routineSteps
+        .where((item) => item.routineId == step.routineId)
+        .toList();
+    existingSteps.removeWhere((item) => item.id == step.id);
+    await _persistRoutineSteps(
+      routineId: step.routineId,
+      steps: _normalizeRoutineSteps(existingSteps),
+    );
   }
 
   Future<void> _persistRoutineSteps({
@@ -576,11 +669,31 @@ class DataProvider extends ChangeNotifier {
     );
   }
 
+  List<RoutineStep> _normalizeRoutineSteps(List<RoutineStep> steps) {
+    final sorted = [...steps]..sort((a, b) => a.order.compareTo(b.order));
+    final now = DateTime.now();
+    return List<RoutineStep>.generate(sorted.length, (index) {
+      final step = sorted[index];
+      final updatedAt =
+          step.order == index ? step.updatedAt : (step.updatedAt ?? now);
+      return RoutineStep(
+        id: step.id,
+        routineId: step.routineId,
+        habitId: step.habitId,
+        order: index,
+        durationSeconds: step.durationSeconds,
+        createdAt: step.createdAt,
+        updatedAt: updatedAt,
+      );
+    });
+  }
+
   Future<void> _persistRoutineStepsFromStrings({
     required String routineId,
     required List<String> steps,
   }) async {
     final preparedSteps = <RoutineStep>[];
+    final now = DateTime.now();
     if (steps.isNotEmpty) {
       for (int index = 0; index < steps.length; index++) {
         preparedSteps.add(
@@ -589,7 +702,9 @@ class DataProvider extends ChangeNotifier {
             routineId: routineId,
             habitId: steps[index],
             order: index,
-            durationMinutes: 0,
+            durationSeconds: 0,
+            createdAt: now,
+            updatedAt: now,
           ),
         );
       }

@@ -71,14 +71,18 @@ void main() {
       routineId: 'routine-1',
       habitId: 'habit-1',
       order: 1,
-      durationMinutes: 5,
+      durationSeconds: 300,
+      createdAt: DateTime(2024, 1, 1),
+      updatedAt: DateTime(2024, 1, 2),
     );
 
     final restored = RoutineStep.fromMap(step.toMap());
 
     expect(restored.routineId, step.routineId);
     expect(restored.habitId, step.habitId);
-    expect(restored.durationMinutes, step.durationMinutes);
+    expect(restored.durationSeconds, step.durationSeconds);
+    expect(restored.createdAt?.year, 2024);
+    expect(restored.updatedAt?.day, 2);
   });
 
   test('habit category serializes', () {
