@@ -181,7 +181,7 @@ class _MainScreenState extends State<MainScreen> {
             Icon(
               icon,
               size: AppSizes.iconEmptyState,
-              color: theme.colorScheme.onSurface.withOpacity(0.45),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
             ),
             const SizedBox(height: AppSpacing.page),
             Text(
@@ -196,7 +196,7 @@ class _MainScreenState extends State<MainScreen> {
               message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.textMuted,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -265,7 +265,9 @@ class _MainScreenState extends State<MainScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color:
-                                    theme.colorScheme.tertiary.withOpacity(0.18),
+                                    theme.colorScheme.tertiary.withValues(
+                                      alpha: 0.18,
+                                    ),
                                 borderRadius:
                                     BorderRadius.circular(AppRadii.sm),
                               ),
@@ -417,7 +419,7 @@ class _MainScreenState extends State<MainScreen> {
                       value: progress,
                       minHeight: AppSizes.progressHeight,
                       backgroundColor:
-                          theme.colorScheme.onSurface.withOpacity(0.12),
+                          theme.colorScheme.onSurface.withValues(alpha: 0.12),
                       color: theme.colorScheme.primary,
                     ),
                   ),
@@ -469,7 +471,7 @@ class _MainScreenState extends State<MainScreen> {
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: milestone.isCompleted
                                       ? theme.colorScheme.onSurface
-                                          .withOpacity(0.6)
+                                          .withValues(alpha: 0.6)
                                       : theme.colorScheme.onSurface,
                                   decoration: milestone.isCompleted
                                       ? TextDecoration.lineThrough

@@ -31,7 +31,7 @@ class NeuroCard extends StatelessWidget {
             border: Border.all(color: theme.colorScheme.outline),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.onSurface.withOpacity(0.06),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
                 blurRadius: 18,
                 offset: const Offset(0, 10),
               ),

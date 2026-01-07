@@ -36,8 +36,8 @@ class NeuroButton extends StatelessWidget {
           ),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         ).copyWith(
-          overlayColor: MaterialStateProperty.all(
-            theme.colorScheme.onPrimary.withOpacity(0.12),
+          overlayColor: WidgetStateProperty.all(
+            theme.colorScheme.onPrimary.withValues(alpha: 0.12),
           ),
         ),
         child: Padding(

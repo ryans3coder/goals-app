@@ -77,7 +77,6 @@ class AppTheme {
       surface: AppColors.surface,
       onSurface: AppColors.text,
       background: AppColors.background,
-      onBackground: AppColors.text,
       error: AppColors.danger,
       onError: Colors.white,
     ).copyWith(
@@ -88,7 +87,7 @@ class AppTheme {
     return baseTheme.copyWith(
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -112,7 +111,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surface,
-        selectedColor: AppColors.primary.withOpacity(0.2),
+        selectedColor: AppColors.primary.withValues(alpha: 0.2),
         disabledColor: AppColors.outline,
         labelStyle: textTheme.bodySmall,
         secondaryLabelStyle: textTheme.bodySmall?.copyWith(
@@ -124,12 +123,12 @@ class AppTheme {
         ),
       ),
       checkboxTheme: CheckboxThemeData(
-        fillColor: MaterialStateProperty.resolveWith(
-          (states) => states.contains(MaterialState.selected)
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
               ? AppColors.primary
               : Colors.transparent,
         ),
-        checkColor: MaterialStateProperty.all(Colors.white),
+        checkColor: WidgetStateProperty.all(Colors.white),
         side: const BorderSide(color: AppColors.outline, width: 1.2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(6),
@@ -257,7 +256,6 @@ class AppTheme {
       surface: AppDarkColors.surface,
       onSurface: AppDarkColors.text,
       background: AppDarkColors.background,
-      onBackground: AppDarkColors.text,
       error: AppDarkColors.danger,
       onError: Colors.white,
     ).copyWith(
@@ -268,7 +266,7 @@ class AppTheme {
     return baseTheme.copyWith(
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppDarkColors.background,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppDarkColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -292,7 +290,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppDarkColors.surface,
-        selectedColor: AppDarkColors.primary.withOpacity(0.3),
+        selectedColor: AppDarkColors.primary.withValues(alpha: 0.3),
         disabledColor: AppDarkColors.outline,
         labelStyle: textTheme.bodySmall,
         secondaryLabelStyle: textTheme.bodySmall?.copyWith(
@@ -304,12 +302,12 @@ class AppTheme {
         ),
       ),
       checkboxTheme: CheckboxThemeData(
-        fillColor: MaterialStateProperty.resolveWith(
-          (states) => states.contains(MaterialState.selected)
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
               ? AppDarkColors.primary
               : Colors.transparent,
         ),
-        checkColor: MaterialStateProperty.all(Colors.white),
+        checkColor: WidgetStateProperty.all(Colors.white),
         side: const BorderSide(color: AppDarkColors.outline, width: 1.2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(6),

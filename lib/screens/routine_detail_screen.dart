@@ -138,7 +138,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
     final theme = Theme.of(context);
     if (_isCompleted) {
       return Scaffold(
-        backgroundColor: theme.colorScheme.background,
+        backgroundColor: theme.colorScheme.surface,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),
@@ -175,7 +175,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
     final currentStep = _steps[_currentStepIndex];
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
@@ -207,7 +207,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                 'Passo ${_currentStepIndex + 1} de ${_steps.length}',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -242,7 +242,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: theme.colorScheme.onSurface,
                           side: BorderSide(
-                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                             width: 1.5,
                           ),
                           shape: RoundedRectangleBorder(
