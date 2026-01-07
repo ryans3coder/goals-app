@@ -5,6 +5,7 @@ import 'package:flutter_application_1/models/goal.dart';
 import 'package:flutter_application_1/models/habit.dart';
 import 'package:flutter_application_1/models/milestone.dart';
 import 'package:flutter_application_1/models/routine.dart';
+import 'package:flutter_application_1/models/routine_event.dart';
 import 'package:flutter_application_1/models/routine_step.dart';
 
 void main() {
@@ -119,5 +120,23 @@ void main() {
 
     expect(restored.categoryId, routine.categoryId);
     expect(restored.steps, routine.steps);
+  });
+
+  test('routine event serializes', () {
+    final event = RoutineEvent(
+      id: 'event-1',
+      type: RoutineEventType.stepCompleted,
+      routineId: 'routine-1',
+      habitId: 'habit-1',
+      timestamp: DateTime(2024, 1, 1, 8, 0),
+    );
+
+    final restored = RoutineEvent.fromMap(event.toMap());
+
+    expect(restored.id, event.id);
+    expect(restored.type, RoutineEventType.stepCompleted);
+    expect(restored.routineId, event.routineId);
+    expect(restored.habitId, event.habitId);
+    expect(restored.timestamp.year, 2024);
   });
 }

@@ -60,4 +60,19 @@ class AppStrings {
   static const String habitCreateAction = 'Novo hábito';
   static const String habitCreateHint =
       'Adicione os detalhes para criar seu hábito.';
+  static const String routineRunTitle = 'Modo de execução';
+  static const String routineRunStart = 'Iniciar';
+  static const String routineRunPause = 'Pausar';
+  static const String routineRunResume = 'Retomar';
+  static const String routineRunNoStepsTitle = 'Sem passos na rotina';
+  static const String routineRunNoStepsMessage =
+      'Adicione passos antes de iniciar a execução.';
+  static const String routineRunSkipTitle = 'Pular este passo?';
+  static const String routineRunSkipMessage =
+      'Você pode concluir depois. Deseja pular agora?';
+  static const String routineRunSkipAction = 'Pular passo';
+  static const String routineRunCompletedTitle = 'Rotina concluída';
+  static const String routineRunBackgroundPause =
+      'Ao sair do app, a rotina é pausada automaticamente.';
+  static const String routineRunStartAction = 'Iniciar rotina';
 }

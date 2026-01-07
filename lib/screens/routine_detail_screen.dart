@@ -1,11 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/habit.dart';
 import '../models/routine.dart';
 import '../models/routine_step.dart';
+import '../screens/routine_run_screen.dart';
 import '../services/data_provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_strings.dart';
@@ -21,96 +20,16 @@ class RoutineDetailScreen extends StatefulWidget {
 }
 
 class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
-  int _currentStepIndex = 0;
-  bool _isCompleted = false;
-  bool _historySaved = false;
-  Timer? _timer;
-  Duration? _remainingTime;
-  String? _activeStepId;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final steps =
-        context.read<DataProvider>().routineStepsByRoutineId(widget.routine.id);
-    if (steps.isNotEmpty && _activeStepId == null) {
-      _activeStepId = steps.first.id;
-      _setupTimerForStep(steps.first);
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _setupTimerForStep(RoutineStep? step) {
-    _timer?.cancel();
-    if (step == null || step.durationSeconds <= 0) {
-      if (mounted) {
-        setState(() => _remainingTime = null);
-      }
-      return;
-    }
-
-    final duration = Duration(seconds: step.durationSeconds);
-    if (mounted) {
-      setState(() => _remainingTime = duration);
-    }
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingTime == null) {
-        timer.cancel();
-        return;
-      }
-      if (_remainingTime!.inSeconds <= 1) {
-        if (mounted) {
-          setState(() => _remainingTime = Duration.zero);
-        }
-        timer.cancel();
-        return;
-      }
-      if (mounted) {
-        setState(() {
-          _remainingTime = _remainingTime! - const Duration(seconds: 1);
-        });
-      }
-    });
-  }
-
-  Future<void> _completeRoutine() async {
-    if (_isCompleted) {
-      return;
-    }
-    _timer?.cancel();
-    setState(() => _isCompleted = true);
-
-    if (_historySaved) {
-      return;
-    }
-
-    _historySaved = true;
-    await context.read<DataProvider>().addRoutineHistory(
-          routine: widget.routine,
-        );
-  }
-
-  void _advanceStep(List<RoutineStep> steps) {
+  void _openRunMode(List<RoutineStep> steps) {
     if (steps.isEmpty) {
+      _showSnack(AppStrings.routineRunNoStepsMessage);
       return;
     }
-    if (_currentStepIndex >= steps.length - 1) {
-      _completeRoutine();
-    } else {
-      final nextIndex = _currentStepIndex + 1;
-      setState(() => _currentStepIndex = nextIndex);
-      _setupTimerForStep(steps[nextIndex]);
-    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RoutineRunScreen(routine: widget.routine),
+      ),
+    );
   }
 
   void _showSnack(String message) {
@@ -387,59 +306,19 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
     }
   }
 
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
   String _formatDurationLabel(int durationSeconds) {
     if (durationSeconds <= 0) {
       return 'Definir duração';
     }
     final duration = Duration(seconds: durationSeconds);
-    return _formatDuration(duration);
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    if (_isCompleted) {
-      return Scaffold(
-        backgroundColor: theme.colorScheme.surface,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Spacer(),
-                Text(
-                  'Rotina Concluída',
-                  style: theme.textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  'Excelente! Você finalizou mais uma etapa do seu foco.',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const Spacer(),
-                AppPrimaryButton(
-                  label: AppStrings.back,
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     final dataProvider = context.watch<DataProvider>();
     final steps = dataProvider.routineStepsByRoutineId(widget.routine.id);
     final habits = dataProvider.habits;
@@ -447,47 +326,6 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
       for (final habit in habits) habit.id: habit,
     };
     final hasSteps = steps.isNotEmpty;
-    final maxIndex = hasSteps ? steps.length - 1 : 0;
-    final safeIndex =
-        hasSteps ? _currentStepIndex.clamp(0, maxIndex) : _currentStepIndex;
-    final currentStep = hasSteps ? steps[safeIndex] : null;
-
-    if (_currentStepIndex != safeIndex && hasSteps) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) {
-          return;
-        }
-        setState(() => _currentStepIndex = safeIndex);
-      });
-    }
-
-    if (_activeStepId != currentStep?.id) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) {
-          return;
-        }
-        _activeStepId = currentStep?.id;
-        _setupTimerForStep(currentStep);
-      });
-    }
-
-    if (!hasSteps && _activeStepId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) {
-          return;
-        }
-        _activeStepId = null;
-        _setupTimerForStep(null);
-      });
-    }
-
-    final currentHabit = currentStep != null
-        ? habitLookup[currentStep.habitId]
-        : null;
-    final currentTitle = currentStep == null
-        ? 'Sem passos definidos'
-        : '${currentHabit?.emoji.isNotEmpty == true ? currentHabit!.emoji : '•'} '
-            '${currentHabit?.title ?? 'Hábito removido'}';
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -635,53 +473,20 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                     existingSteps: steps,
                   ),
                 ),
+                const SizedBox(height: AppSpacing.md),
+                AppPrimaryButton(
+                  label: AppStrings.routineRunStartAction,
+                  onPressed: () => _openRunMode(steps),
+                ),
                 const SizedBox(height: AppSpacing.xl),
                 Text(
                   hasSteps
-                      ? 'Passo ${safeIndex + 1} de ${steps.length}'
-                      : 'Passo 0 de 0',
+                      ? 'Passos configurados: ${steps.length}'
+                      : AppStrings.routineRunNoStepsTitle,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  currentTitle,
-                  style: theme.textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                if (_remainingTime != null) ...[
-                  Center(
-                    child: Text(
-                      _formatDuration(_remainingTime!),
-                      style: theme.textTheme.displayMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                ],
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppSecondaryButton(
-                        label: AppStrings.skip,
-                        onPressed: hasSteps ? () => _advanceStep(steps) : null,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.lg),
-                    Expanded(
-                      child: AppPrimaryButton(
-                        label: AppStrings.next,
-                        onPressed: hasSteps ? () => _advanceStep(steps) : null,
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
