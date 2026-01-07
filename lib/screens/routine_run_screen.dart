@@ -255,6 +255,9 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
       });
     }
     await _ensureRoutineStarted();
+    if (!mounted) {
+      return;
+    }
     _timerController.startStep(index, step.durationSeconds);
   }
 
