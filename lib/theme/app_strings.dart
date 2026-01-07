@@ -21,6 +21,25 @@ class AppStrings {
   static const String nameLabel = 'Nome';
   static const String nameRequired = 'Informe um nome para continuar.';
   static const String habitCategoryLabel = 'Categoria (opcional)';
+  static const String habitCategoryManageLabel = 'Categorias de hábitos';
+  static const String habitCategoryManageHint =
+      'Organize hábitos com categorias personalizadas.';
+  static const String habitCategoryCreateTitle = 'Nova categoria';
+  static const String habitCategoryEditTitle = 'Editar categoria';
+  static const String habitCategoryNameLabel = 'Nome da categoria';
+  static const String habitCategoryEmojiLabel = 'Emoji da categoria';
+  static const String habitCategoryColorLabel = 'Cor da categoria';
+  static const String habitCategoryDeleteTitle = 'Excluir categoria?';
+  static const String habitCategoryDeleteMessage =
+      'Essa ação remove a categoria e desvincula os hábitos associados.';
+  static const String habitCategoryDeleteAction = 'Excluir categoria';
+  static const String habitCategorySaveError =
+      'Não foi possível salvar a categoria.';
+  static const String habitCategoryDeleteError =
+      'Não foi possível excluir a categoria.';
+  static const String habitCategoryEmptyTitle = 'Sem categorias por enquanto.';
+  static const String habitCategoryEmptyMessage =
+      'Crie categorias para organizar seus hábitos.';
   static const String habitDescriptionLabel = 'Descrição (opcional)';
   static const String habitEmojiLabel = 'Emoji';
   static const String habitEmojiRequired = 'Selecione um emoji para continuar.';

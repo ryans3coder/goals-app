@@ -22,6 +22,7 @@ class _HabitFormScreenState extends State<HabitFormScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   String? _selectedEmoji;
+  String? _selectedCategoryId;
   String? _emojiError;
   bool _isSaving = false;
 
@@ -37,6 +38,7 @@ class _HabitFormScreenState extends State<HabitFormScreen> {
     _selectedEmoji = habit?.emoji.isNotEmpty == true
         ? habit?.emoji
         : HabitFormOptions.fallbackEmoji;
+    _selectedCategoryId = habit?.categoryId;
   }
 
   @override
@@ -72,7 +74,7 @@ class _HabitFormScreenState extends State<HabitFormScreen> {
               HabitFormOptions.defaultFrequency,
           currentStreak: existingHabit?.currentStreak ?? 0,
           isCompletedToday: existingHabit?.isCompletedToday ?? false,
-          categoryId: existingHabit?.categoryId,
+          categoryId: _selectedCategoryId,
           emoji: _selectedEmoji ?? HabitFormOptions.fallbackEmoji,
           description: _descriptionController.text.trim(),
         ),
@@ -144,6 +146,12 @@ class _HabitFormScreenState extends State<HabitFormScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final categories = context.watch<DataProvider>().categories;
+    final sortedCategories = [...categories]
+      ..sort((a, b) => a.name.compareTo(b.name));
+    final availableCategoryIds = sortedCategories.map((item) => item.id).toSet();
+    final missingCategory = _selectedCategoryId != null &&
+        !availableCategoryIds.contains(_selectedCategoryId);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -215,6 +223,34 @@ class _HabitFormScreenState extends State<HabitFormScreen> {
                     ),
                   ),
                 ],
+                const SizedBox(height: AppSpacing.lg),
+                DropdownButtonFormField<String?>(
+                  value: _selectedCategoryId,
+                  decoration: const InputDecoration(
+                    labelText: AppStrings.habitCategoryLabel,
+                  ),
+                  items: [
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text(AppStrings.habitNoCategory),
+                    ),
+                    if (missingCategory)
+                      DropdownMenuItem<String?>(
+                        value: _selectedCategoryId,
+                        child: Text(_selectedCategoryId ?? ''),
+                      ),
+                    for (final category in sortedCategories)
+                      DropdownMenuItem<String?>(
+                        value: category.id,
+                        child: Text('${category.emoji} ${category.name}'),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCategoryId = value;
+                    });
+                  },
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 TextFormField(
                   controller: _descriptionController,

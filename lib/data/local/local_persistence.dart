@@ -1,10 +1,10 @@
-import '../../domain/repositories/category_repository.dart';
+import '../../domain/repositories/habit_category_repository.dart';
 import '../../domain/repositories/goal_repository.dart';
 import '../../domain/repositories/habit_repository.dart';
 import '../../domain/repositories/routine_repository.dart';
 import '../../domain/repositories/routine_step_repository.dart';
 import '../../services/local_data_store.dart';
-import '../repositories/hive_category_repository.dart';
+import '../repositories/hive_habit_category_repository.dart';
 import '../repositories/hive_goal_repository.dart';
 import '../repositories/hive_habit_repository.dart';
 import '../repositories/hive_routine_repository.dart';
@@ -25,7 +25,7 @@ class LocalPersistence {
       HiveRoutineRepository(resolvedDatabase),
       HiveRoutineStepRepository(resolvedDatabase),
       HiveGoalRepository(resolvedDatabase),
-      HiveCategoryRepository(resolvedDatabase),
+      HiveHabitCategoryRepository(resolvedDatabase),
     );
   }
 
@@ -45,13 +45,13 @@ class LocalPersistence {
   final RoutineRepository _routineRepository;
   final RoutineStepRepository _routineStepRepository;
   final GoalRepository _goalRepository;
-  final CategoryRepository _categoryRepository;
+  final HabitCategoryRepository _categoryRepository;
 
   HabitRepository get habits => _habitRepository;
   RoutineRepository get routines => _routineRepository;
   RoutineStepRepository get routineSteps => _routineStepRepository;
   GoalRepository get goals => _goalRepository;
-  CategoryRepository get categories => _categoryRepository;
+  HabitCategoryRepository get categories => _categoryRepository;
 
   Future<void> initialize() async {
     await _database.initialize();
