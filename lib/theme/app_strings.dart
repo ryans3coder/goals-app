@@ -75,4 +75,10 @@ class AppStrings {
   static const String routineRunBackgroundPause =
       'Ao sair do app, a rotina é pausada automaticamente.';
   static const String routineRunStartAction = 'Iniciar rotina';
+  static const String feedbackPreferencesTitle = 'Feedback de conclusão';
+  static const String feedbackPreferencesHint =
+      'Escolha como receber o feedback ao concluir rotinas.';
+  static const String feedbackSoundLabel = 'Som';
+  static const String feedbackAnimationsLabel = 'Animações';
+  static const String feedbackHapticLabel = 'Vibração';
 }
