@@ -1,12 +1,12 @@
 class Routine {
-  const Routine({
+  Routine({
     required this.id,
     required this.userId,
     required this.title,
     required this.icon,
     required this.triggerTime,
-    required this.steps,
-  });
+    required List<String> steps,
+  }) : steps = List.unmodifiable(steps);
 
   final String id;
   final String userId;
@@ -47,7 +47,9 @@ class Routine {
 
   static List<String> _parseSteps(dynamic value) {
     if (value is List) {
-      return value.map((item) => item.toString()).toList();
+      return List<String>.unmodifiable(
+        value.map((item) => item.toString()),
+      );
     }
     return const [];
   }

@@ -1,12 +1,12 @@
 class Habit {
-  const Habit({
+  Habit({
     required this.id,
     required this.userId,
     required this.title,
-    required this.frequency,
+    required List<String> frequency,
     required this.currentStreak,
     required this.isCompletedToday,
-  });
+  }) : frequency = List.unmodifiable(frequency);
 
   final String id;
   final String userId;
@@ -47,7 +47,9 @@ class Habit {
 
   static List<String> _parseFrequency(dynamic value) {
     if (value is List) {
-      return value.map((item) => item.toString()).toList();
+      return List<String>.unmodifiable(
+        value.map((item) => item.toString()),
+      );
     }
     return const [];
   }

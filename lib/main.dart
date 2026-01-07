@@ -9,6 +9,8 @@ import 'screens/main_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/auth_service.dart';
 import 'services/data_provider.dart';
+import 'services/local_data_store.dart';
+import 'services/remote_sync_service.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -29,7 +31,17 @@ class NeuroSyncApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<AuthService>(create: (_) => AuthService()),
-        ChangeNotifierProvider<DataProvider>(create: (_) => DataProvider()),
+        Provider<RemoteSyncService>(
+          create: (context) => FirebaseRemoteSyncService(
+            authService: context.read<AuthService>(),
+          ),
+        ),
+        ChangeNotifierProvider<DataProvider>(
+          create: (context) => DataProvider(
+            localStore: LocalDataStore(),
+            remoteSync: context.read<RemoteSyncService>(),
+          ),
+        ),
         StreamProvider<firebase_auth.User?>(
           create: (context) => context.read<AuthService>().authStateChanges,
           initialData: null,

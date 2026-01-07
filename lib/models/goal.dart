@@ -1,14 +1,14 @@
 import 'milestone.dart';
 
 class Goal {
-  const Goal({
+  Goal({
     required this.id,
     required this.userId,
     required this.title,
     required this.reason,
     required this.deadline,
-    required this.milestones,
-  });
+    required List<Milestone> milestones,
+  }) : milestones = List.unmodifiable(milestones);
 
   final String id;
   final String userId;
@@ -49,18 +49,19 @@ class Goal {
 
   static DateTime? _parseDateTime(dynamic value) {
     if (value is String && value.isNotEmpty) {
-      return DateTime.tryParse(value) ?? DateTime.now();
+      return DateTime.tryParse(value);
     }
     return null;
   }
 
   static List<Milestone> _parseMilestones(dynamic value) {
     if (value is List) {
-      return value
-          .whereType<Map>()
-          .map((item) =>
-              Milestone.fromMap(Map<String, dynamic>.from(item)))
-          .toList();
+      return List<Milestone>.unmodifiable(
+        value
+            .whereType<Map>()
+            .map((item) =>
+                Milestone.fromMap(Map<String, dynamic>.from(item))),
+      );
     }
     return const [];
   }

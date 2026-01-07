@@ -10,6 +10,8 @@ class AuthService {
   final FirebaseAuth? _firebaseAuth;
   final GoogleSignIn _googleSignIn;
 
+  User? get currentUser => _firebaseAuth?.currentUser;
+
   static FirebaseAuth? _tryGetFirebaseAuth() {
     try {
       return FirebaseAuth.instance;
