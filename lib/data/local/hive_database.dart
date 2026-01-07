@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart' hide Category;
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../../models/category.dart';
+import '../../models/habit_category.dart';
 import '../../models/goal.dart';
 import '../../models/habit.dart';
 import '../../models/routine.dart';
@@ -10,7 +10,9 @@ import '../../models/routine_step.dart';
 import '../../services/local_data_store.dart';
 
 class HiveDatabase {
-  HiveDatabase({HiveInterface? hive}) : _hive = hive ?? Hive;
+  HiveDatabase({HiveInterface? hive, bool autoInitialize = true})
+      : _hive = hive ?? Hive,
+        _autoInitialize = autoInitialize;
 
   static const String habitsBoxName = 'habits';
   static const String routinesBoxName = 'routines';
@@ -21,6 +23,7 @@ class HiveDatabase {
   static const String migratedKey = 'migrated_from_shared_prefs';
 
   final HiveInterface _hive;
+  final bool _autoInitialize;
 
   Box<Map>? _habitsBox;
   Box<Map>? _routinesBox;
@@ -34,7 +37,9 @@ class HiveDatabase {
     if (_initialized) {
       return;
     }
-    await Hive.initFlutter();
+    if (_autoInitialize) {
+      await Hive.initFlutter();
+    }
     _habitsBox = await _hive.openBox<Map>(habitsBoxName);
     _routinesBox = await _hive.openBox<Map>(routinesBoxName);
     _routineStepsBox = await _hive.openBox<Map>(routineStepsBoxName);
@@ -111,9 +116,9 @@ class HiveDatabase {
         .toList();
   }
 
-  List<Category> decodeCategories() {
+  List<HabitCategory> decodeCategories() {
     return categoriesBox.values
-        .map((item) => Category.fromMap(Map<String, dynamic>.from(item)))
+        .map((item) => HabitCategory.fromMap(Map<String, dynamic>.from(item)))
         .toList();
   }
 }

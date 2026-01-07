@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter_application_1/models/category.dart';
+import 'package:flutter_application_1/models/habit_category.dart';
 import 'package:flutter_application_1/models/goal.dart';
 import 'package:flutter_application_1/models/habit.dart';
 import 'package:flutter_application_1/models/milestone.dart';
@@ -81,19 +81,23 @@ void main() {
     expect(restored.durationMinutes, step.durationMinutes);
   });
 
-  test('category serializes', () {
-    final category = Category(
+  test('habit category serializes', () {
+    final category = HabitCategory(
       id: 'cat-1',
-      userId: 'user-1',
-      title: 'Bem-estar',
-      colorHex: '#FF0000',
-      icon: 'heart',
+      name: 'Bem-estar',
+      emoji: '🌿',
+      colorToken: 'primary',
+      createdAt: DateTime(2024, 1, 1),
+      updatedAt: DateTime(2024, 1, 2),
     );
 
-    final restored = Category.fromMap(category.toMap());
+    final restored = HabitCategory.fromMap(category.toMap());
 
-    expect(restored.title, category.title);
-    expect(restored.colorHex, category.colorHex);
+    expect(restored.name, category.name);
+    expect(restored.emoji, category.emoji);
+    expect(restored.colorToken, category.colorToken);
+    expect(restored.createdAt?.year, 2024);
+    expect(restored.updatedAt?.day, 2);
   });
 
   test('routine serializes with category', () {

@@ -1,18 +1,19 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart' hide Category;
+import 'package:flutter/foundation.dart';
 
 import '../data/local/local_persistence.dart';
-import '../domain/use_cases/category_use_cases.dart';
+import '../domain/habits/habit_category_defaults.dart';
+import '../domain/use_cases/habit_category_use_cases.dart';
 import '../domain/use_cases/goal_use_cases.dart';
 import '../domain/use_cases/habit_use_cases.dart';
 import '../domain/use_cases/routine_step_use_cases.dart';
 import '../domain/use_cases/routine_use_cases.dart';
 import '../domain/habits/habit_form_options.dart';
-import '../models/category.dart';
 import '../models/goal.dart';
 import '../models/habit.dart';
+import '../models/habit_category.dart';
 import '../models/milestone.dart';
 import '../models/routine.dart';
 import '../models/routine_step.dart';
@@ -45,18 +46,19 @@ class DataProvider extends ChangeNotifier {
       RoutineStepUseCases(_localPersistence.routineSteps);
   late final GoalUseCases _goalUseCases =
       GoalUseCases(_localPersistence.goals);
-  late final CategoryUseCases _categoryUseCases =
-      CategoryUseCases(_localPersistence.categories);
+  late final HabitCategoryUseCases _categoryUseCases =
+      HabitCategoryUseCases(_localPersistence.categories);
 
   final _habitsController = StreamController<List<Habit>>.broadcast();
   final _routinesController = StreamController<List<Routine>>.broadcast();
   final _goalsController = StreamController<List<Goal>>.broadcast();
-  final _categoriesController = StreamController<List<Category>>.broadcast();
+  final _categoriesController =
+      StreamController<List<HabitCategory>>.broadcast();
 
   final List<Habit> _habits = [];
   final List<Routine> _routines = [];
   final List<Goal> _goals = [];
-  final List<Category> _categories = [];
+  final List<HabitCategory> _categories = [];
   final List<RoutineStep> _routineSteps = [];
 
   late final Future<void> _loadFuture;
@@ -66,6 +68,7 @@ class DataProvider extends ChangeNotifier {
   Future<void> _loadLocalCache() async {
     try {
       await _localPersistence.initialize();
+      await _categoryUseCases.seedDefaults(buildDefaultHabitCategories());
       _habits
         ..clear()
         ..addAll(await _habitUseCases.fetchAll().then(_cloneHabits));
@@ -230,17 +233,18 @@ class DataProvider extends ChangeNotifier {
     return goals.map(_cloneGoal).toList();
   }
 
-  Category _cloneCategory(Category category) {
-    return Category(
+  HabitCategory _cloneCategory(HabitCategory category) {
+    return HabitCategory(
       id: category.id,
-      userId: category.userId,
-      title: category.title,
-      colorHex: category.colorHex,
-      icon: category.icon,
+      name: category.name,
+      emoji: category.emoji,
+      colorToken: category.colorToken,
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt,
     );
   }
 
-  List<Category> _cloneCategories(List<Category> categories) {
+  List<HabitCategory> _cloneCategories(List<HabitCategory> categories) {
     return categories.map(_cloneCategory).toList();
   }
 
@@ -459,26 +463,34 @@ class DataProvider extends ChangeNotifier {
     _scheduleRemoteSync();
   }
 
-  Stream<List<Category>> watchCategories() async* {
+  List<HabitCategory> get categories =>
+      List.unmodifiable(_categories.map(_cloneCategory));
+
+  Stream<List<HabitCategory>> watchCategories() async* {
     await _ensureLoaded();
     yield List.unmodifiable(_categories.map(_cloneCategory));
     yield* _categoriesController.stream;
   }
 
-  Future<void> addCategory(Category category) async {
+  Future<void> addCategory(HabitCategory category) async {
     await _ensureLoaded();
     final categoryId = category.id.isEmpty ? _generateId() : category.id;
-    final normalizedCategory = Category(
+    final now = DateTime.now();
+    final existingIndex = _categories.indexWhere(
+      (item) => item.id == categoryId,
+    );
+    final existing = existingIndex >= 0 ? _categories[existingIndex] : null;
+    final normalizedCategory = HabitCategory(
       id: categoryId,
-      userId: category.userId.isEmpty ? 'local' : category.userId,
-      title: category.title,
-      colorHex: category.colorHex,
-      icon: category.icon,
+      name: category.name.trim(),
+      emoji: category.emoji.trim(),
+      colorToken: category.colorToken,
+      createdAt: existing?.createdAt ?? category.createdAt ?? now,
+      updatedAt: now,
     );
 
-    final index = _categories.indexWhere((item) => item.id == categoryId);
-    if (index >= 0) {
-      _categories[index] = normalizedCategory;
+    if (existingIndex >= 0) {
+      _categories[existingIndex] = normalizedCategory;
     } else {
       _categories.add(normalizedCategory);
     }
@@ -486,6 +498,53 @@ class DataProvider extends ChangeNotifier {
     await _saveLocalState(
       persist: () => _categoryUseCases.upsert(normalizedCategory),
     );
+  }
+
+  Future<void> deleteCategory(HabitCategory category) async {
+    await _ensureLoaded();
+    if (category.id.isEmpty) {
+      return;
+    }
+    _categories.removeWhere((item) => item.id == category.id);
+
+    final updatedHabits = <Habit>[];
+    for (final habit in _habits) {
+      if (habit.categoryId == category.id) {
+        updatedHabits.add(
+          Habit(
+            id: habit.id,
+            userId: habit.userId,
+            title: habit.title,
+            frequency: habit.frequency,
+            currentStreak: habit.currentStreak,
+            isCompletedToday: habit.isCompletedToday,
+            categoryId: null,
+            emoji: habit.emoji,
+            description: habit.description,
+          ),
+        );
+      }
+    }
+
+    if (updatedHabits.isNotEmpty) {
+      for (final habit in updatedHabits) {
+        final index = _habits.indexWhere((item) => item.id == habit.id);
+        if (index >= 0) {
+          _habits[index] = habit;
+        }
+      }
+    }
+
+    await _saveLocalState(
+      persist: () async {
+        await _categoryUseCases.deleteById(category.id);
+        for (final habit in updatedHabits) {
+          await _habitUseCases.upsert(habit);
+        }
+      },
+    );
+
+    _scheduleRemoteSync();
   }
 
   Future<void> updateRoutineSteps({

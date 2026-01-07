@@ -14,6 +14,7 @@ import '../services/data_provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_strings.dart';
 import 'goal_wizard.dart';
+import 'habit_categories_screen.dart';
 import 'habit_form_screen.dart';
 import 'routine_detail_screen.dart';
 import '../widgets/app_buttons.dart';
@@ -205,6 +206,10 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildHabitsTab() {
+    final categories = context.watch<DataProvider>().categories;
+    final categoryLookup = {
+      for (final category in categories) category.id: category,
+    };
     return StreamBuilder<List<Habit>>(
       stream: context.read<DataProvider>().watchHabits(),
       builder: (context, snapshot) {
@@ -246,10 +251,14 @@ class _MainScreenState extends State<MainScreen> {
                 ? habit.emoji
                 : HabitFormOptions.fallbackEmoji;
             final categoryId = habit.categoryId;
-            final categoryLabel =
-                categoryId != null && categoryId.isNotEmpty
+            final category = categoryId != null
+                ? categoryLookup[categoryId]
+                : null;
+            final categoryLabel = category != null
+                ? '${category.emoji} ${category.name}'
+                : (categoryId != null && categoryId.isNotEmpty
                     ? categoryId
-                    : AppStrings.habitNoCategory;
+                    : AppStrings.habitNoCategory);
 
             return AppCard(
               onTap: () => _openHabitForm(habit: habit),
@@ -544,10 +553,11 @@ class _MainScreenState extends State<MainScreen> {
     final user = context.watch<firebase_auth.User?>();
     final authService = context.read<AuthService>();
 
+    final sections = <Widget>[];
+
     if (user == null) {
-      return Padding(
-        padding: const EdgeInsets.all(AppSpacing.page),
-        child: AppCard(
+      sections.add(
+        AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -592,38 +602,72 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ),
       );
+    } else {
+      sections.add(
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                user.displayName ?? 'Usuário conectado',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                user.email ?? 'Email não informado',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.page),
+              AppSecondaryButton(
+                label: AppStrings.signOut,
+                icon: const Icon(Icons.logout),
+                onPressed: () async {
+                  await authService.signOut();
+                },
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.page),
-      child: AppCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              user.displayName ?? 'Usuário conectado',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
+    sections.add(
+      AppCard(
+        child: ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            AppStrings.habitCategoryManageLabel,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          subtitle: Text(
+            AppStrings.habitCategoryManageHint,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textMuted,
+            ),
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const HabitCategoriesScreen(),
               ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              user.email ?? 'Email não informado',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.textMuted,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.page),
-            AppSecondaryButton(
-              label: AppStrings.signOut,
-              icon: const Icon(Icons.logout),
-              onPressed: () async {
-                await authService.signOut();
-              },
-            ),
-          ],
+            );
+          },
         ),
       ),
+    );
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(AppSpacing.page),
+      itemCount: sections.length,
+      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
+      itemBuilder: (context, index) => sections[index],
     );
   }
 
