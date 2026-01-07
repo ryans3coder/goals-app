@@ -245,9 +245,11 @@ class _MainScreenState extends State<MainScreen> {
             final emoji = habit.emoji.isNotEmpty
                 ? habit.emoji
                 : HabitFormOptions.fallbackEmoji;
-            final categoryLabel = habit.category.isNotEmpty
-                ? habit.category
-                : AppStrings.habitNoCategory;
+            final categoryId = habit.categoryId;
+            final categoryLabel =
+                categoryId != null && categoryId.isNotEmpty
+                    ? categoryId
+                    : AppStrings.habitNoCategory;
 
             return AppCard(
               onTap: () => _openHabitForm(habit: habit),

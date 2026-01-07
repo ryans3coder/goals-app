@@ -20,7 +20,6 @@ class HabitFormScreen extends StatefulWidget {
 class _HabitFormScreenState extends State<HabitFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
-  late final TextEditingController _categoryController;
   late final TextEditingController _descriptionController;
   String? _selectedEmoji;
   String? _emojiError;
@@ -33,7 +32,6 @@ class _HabitFormScreenState extends State<HabitFormScreen> {
     super.initState();
     final habit = widget.habit;
     _nameController = TextEditingController(text: habit?.title ?? '');
-    _categoryController = TextEditingController(text: habit?.category ?? '');
     _descriptionController =
         TextEditingController(text: habit?.description ?? '');
     _selectedEmoji = habit?.emoji.isNotEmpty == true
@@ -44,7 +42,6 @@ class _HabitFormScreenState extends State<HabitFormScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _categoryController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -75,9 +72,9 @@ class _HabitFormScreenState extends State<HabitFormScreen> {
               HabitFormOptions.defaultFrequency,
           currentStreak: existingHabit?.currentStreak ?? 0,
           isCompletedToday: existingHabit?.isCompletedToday ?? false,
+          categoryId: existingHabit?.categoryId,
           emoji: _selectedEmoji ?? HabitFormOptions.fallbackEmoji,
           description: _descriptionController.text.trim(),
-          category: _categoryController.text.trim(),
         ),
       );
       if (mounted) {
@@ -218,14 +215,6 @@ class _HabitFormScreenState extends State<HabitFormScreen> {
                     ),
                   ),
                 ],
-                const SizedBox(height: AppSpacing.lg),
-                TextFormField(
-                  controller: _categoryController,
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.habitCategoryLabel,
-                  ),
-                  textInputAction: TextInputAction.next,
-                ),
                 const SizedBox(height: AppSpacing.lg),
                 TextFormField(
                   controller: _descriptionController,

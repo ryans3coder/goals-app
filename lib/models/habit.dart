@@ -6,9 +6,9 @@ class Habit {
     required List<String> frequency,
     required this.currentStreak,
     required this.isCompletedToday,
+    this.categoryId,
     this.emoji = '',
     this.description = '',
-    this.category = '',
   }) : frequency = List.unmodifiable(frequency);
 
   final String id;
@@ -17,9 +17,9 @@ class Habit {
   final List<String> frequency;
   final int currentStreak;
   final bool isCompletedToday;
+  final String? categoryId;
   final String emoji;
   final String description;
-  final String category;
 
   factory Habit.fromMap(Map<String, dynamic> map, {String? id}) {
     return Habit(
@@ -29,11 +29,9 @@ class Habit {
       frequency: _parseFrequency(map['frequency']),
       currentStreak: (map['currentStreak'] as num?)?.toInt() ?? 0,
       isCompletedToday: (map['isCompletedToday'] as bool?) ?? false,
+      categoryId: _parseCategoryId(map),
       emoji: (map['emoji'] as String?) ?? '',
       description: (map['description'] as String?) ?? '',
-      category: (map['category'] as String?) ??
-          (map['categoryId'] as String?) ??
-          '',
     );
   }
 
@@ -42,7 +40,7 @@ class Habit {
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = <String, dynamic>{
       'id': id,
       'userId': userId,
       'title': title,
@@ -51,8 +49,11 @@ class Habit {
       'isCompletedToday': isCompletedToday,
       'emoji': emoji,
       'description': description,
-      'category': category,
     };
+    if (categoryId != null && categoryId!.isNotEmpty) {
+      map['categoryId'] = categoryId;
+    }
+    return map;
   }
 
   Map<String, dynamic> toJson() {
@@ -66,5 +67,17 @@ class Habit {
       );
     }
     return const [];
+  }
+
+  static String? _parseCategoryId(Map<String, dynamic> map) {
+    final categoryId = map['categoryId'];
+    if (categoryId is String && categoryId.trim().isNotEmpty) {
+      return categoryId;
+    }
+    final legacyCategory = map['category'];
+    if (legacyCategory is String && legacyCategory.trim().isNotEmpty) {
+      return legacyCategory;
+    }
+    return null;
   }
 }

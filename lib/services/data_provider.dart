@@ -176,9 +176,9 @@ class DataProvider extends ChangeNotifier {
       frequency: habit.frequency,
       currentStreak: habit.currentStreak,
       isCompletedToday: habit.isCompletedToday,
+      categoryId: habit.categoryId,
       emoji: habit.emoji,
       description: habit.description,
-      category: habit.category,
     );
   }
 
@@ -263,6 +263,11 @@ class DataProvider extends ChangeNotifier {
     final frequency = habit.frequency.isNotEmpty
         ? habit.frequency
         : HabitFormOptions.defaultFrequency;
+    final normalizedCategoryId = habit.categoryId?.trim();
+    final categoryId =
+        normalizedCategoryId == null || normalizedCategoryId.isEmpty
+            ? null
+            : normalizedCategoryId;
     final normalizedHabit = Habit(
       id: habitId,
       userId: habit.userId.isEmpty ? 'local' : habit.userId,
@@ -270,9 +275,9 @@ class DataProvider extends ChangeNotifier {
       frequency: frequency,
       currentStreak: habit.currentStreak,
       isCompletedToday: habit.isCompletedToday,
+      categoryId: categoryId,
       emoji: habit.emoji,
       description: habit.description,
-      category: habit.category,
     );
 
     final index = _habits.indexWhere((item) => item.id == habitId);
