@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,46 +12,12 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const AppBootstrap());
-}
-
-class AppBootstrap extends StatelessWidget {
-  const AppBootstrap({super.key});
-
-  static final Future<FirebaseApp> _initialization =
-      Firebase.initializeApp();
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<FirebaseApp>(
-      future: _initialization,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.darkTheme,
-            home: const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.darkTheme,
-            home: const Scaffold(
-              body: Center(
-                child: Text('Não foi possível iniciar o app.'),
-              ),
-            ),
-          );
-        }
-
-        return const NeuroSyncApp();
-      },
-    );
+  try {
+    await Firebase.initializeApp();
+  } catch (error) {
+    debugPrint('Falha ao inicializar o Firebase: $error');
   }
+  runApp(const NeuroSyncApp());
 }
 
 class NeuroSyncApp extends StatelessWidget {
