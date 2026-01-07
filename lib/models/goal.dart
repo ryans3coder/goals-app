@@ -23,14 +23,13 @@ class Goal {
       userId: (map['userId'] as String?) ?? '',
       title: (map['title'] as String?) ?? '',
       reason: (map['reason'] as String?) ?? '',
-      deadline: _dateTimeFromMap(map['deadline']),
-      milestones: (map['milestones'] as List<dynamic>?)
-              ?.map((value) => Milestone.fromMap(
-                    Map<String, dynamic>.from(value as Map),
-                  ))
-              .toList() ??
-          const [],
+      deadline: _parseDateTime(map['deadline']),
+      milestones: _parseMilestones(map['milestones']),
     );
+  }
+
+  factory Goal.fromJson(Map<String, dynamic> json, {String? id}) {
+    return Goal.fromMap(json, id: id);
   }
 
   Map<String, dynamic> toMap() {
@@ -44,11 +43,25 @@ class Goal {
     };
   }
 
-  static DateTime? _dateTimeFromMap(dynamic value) {
-    if (value is String && value.isNotEmpty) {
-      return DateTime.parse(value);
-    }
+  Map<String, dynamic> toJson() {
+    return toMap();
+  }
 
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value is String && value.isNotEmpty) {
+      return DateTime.tryParse(value) ?? DateTime.now();
+    }
     return null;
+  }
+
+  static List<Milestone> _parseMilestones(dynamic value) {
+    if (value is List) {
+      return value
+          .whereType<Map>()
+          .map((item) =>
+              Milestone.fromMap(Map<String, dynamic>.from(item)))
+          .toList();
+    }
+    return const [];
   }
 }

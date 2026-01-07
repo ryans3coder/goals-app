@@ -2,18 +2,25 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/goal.dart';
 import '../models/habit.dart';
 import '../models/routine.dart';
 
-class DataProvider {
-  DataProvider({SharedPreferences? preferences})
+typedef RemoteSync = Future<void> Function(Map<String, dynamic> payload);
+
+class DataProvider extends ChangeNotifier {
+  DataProvider({SharedPreferences? preferences, RemoteSync? remoteSync})
       : _preferences = preferences,
-        _random = Random();
+        _remoteSync = remoteSync,
+        _random = Random() {
+    unawaited(_initializeLocal());
+  }
 
   final SharedPreferences? _preferences;
+  final RemoteSync? _remoteSync;
   final Random _random;
 
   static const _habitsKey = 'local_habits';
@@ -26,14 +33,15 @@ class DataProvider {
   final _goalsController = StreamController<List<Goal>>.broadcast();
 
   SharedPreferences? _resolvedPreferences;
+  bool _localLoaded = false;
 
   final List<Habit> _habits = [];
   final List<Routine> _routines = [];
   final List<Goal> _goals = [];
 
-  bool _habitsLoaded = false;
-  bool _routinesLoaded = false;
-  bool _goalsLoaded = false;
+  Future<void> _initializeLocal() async {
+    await _loadLocalCache();
+  }
 
   Future<SharedPreferences> _getPreferences() async {
     if (_resolvedPreferences != null) {
@@ -50,42 +58,34 @@ class DataProvider {
     return '$timestamp$randomSuffix';
   }
 
-  Future<void> _loadHabits() async {
-    if (_habitsLoaded) {
+  Future<void> _loadLocalCache() async {
+    if (_localLoaded) {
       return;
     }
-    _habitsLoaded = true;
+    _localLoaded = true;
+
     final preferences = await _getPreferences();
-    final raw = preferences.getString(_habitsKey);
+    final habitsRaw = preferences.getString(_habitsKey);
+    final routinesRaw = preferences.getString(_routinesKey);
+    final goalsRaw = preferences.getString(_goalsKey);
+
     _habits
       ..clear()
-      ..addAll(_decodeHabits(raw));
-    _emitHabits();
-  }
-
-  Future<void> _loadRoutines() async {
-    if (_routinesLoaded) {
-      return;
-    }
-    _routinesLoaded = true;
-    final preferences = await _getPreferences();
-    final raw = preferences.getString(_routinesKey);
+      ..addAll(_decodeHabits(habitsRaw));
     _routines
       ..clear()
-      ..addAll(_decodeRoutines(raw));
-    _emitRoutines();
-  }
-
-  Future<void> _loadGoals() async {
-    if (_goalsLoaded) {
-      return;
-    }
-    _goalsLoaded = true;
-    final preferences = await _getPreferences();
-    final raw = preferences.getString(_goalsKey);
+      ..addAll(_decodeRoutines(routinesRaw));
     _goals
       ..clear()
-      ..addAll(_decodeGoals(raw));
+      ..addAll(_decodeGoals(goalsRaw));
+
+    _emitAll();
+    notifyListeners();
+  }
+
+  void _emitAll() {
+    _emitHabits();
+    _emitRoutines();
     _emitGoals();
   }
 
@@ -174,8 +174,44 @@ class DataProvider {
     await preferences.setString(_goalsKey, encoded);
   }
 
+  Future<void> _saveLocalHabits() async {
+    _emitHabits();
+    notifyListeners();
+    await _persistHabits();
+  }
+
+  Future<void> _saveLocalRoutines() async {
+    _emitRoutines();
+    notifyListeners();
+    await _persistRoutines();
+  }
+
+  Future<void> _saveLocalGoals() async {
+    _emitGoals();
+    notifyListeners();
+    await _persistGoals();
+  }
+
+  void _triggerRemoteSync() {
+    unawaited(_syncRemote());
+  }
+
+  Future<void> _syncRemote() async {
+    try {
+      final remoteSync = _remoteSync;
+      if (remoteSync == null) {
+        return;
+      }
+      await remoteSync({
+        'habits': _habits.map((habit) => habit.toMap()).toList(),
+        'routines': _routines.map((routine) => routine.toMap()).toList(),
+        'goals': _goals.map((goal) => goal.toMap()).toList(),
+      });
+    } catch (_) {}
+  }
+
   Future<void> addHabit(Habit habit) async {
-    await _loadHabits();
+    await _loadLocalCache();
     final habitId = habit.id.isEmpty ? _generateId() : habit.id;
     final normalizedHabit = Habit(
       id: habitId,
@@ -192,12 +228,12 @@ class DataProvider {
     } else {
       _habits.add(normalizedHabit);
     }
-    await _persistHabits();
-    _emitHabits();
+    await _saveLocalHabits();
+    _triggerRemoteSync();
   }
 
   Stream<List<Habit>> watchHabits() async* {
-    await _loadHabits();
+    await _loadLocalCache();
     yield List.unmodifiable(_habits);
     yield* _habitsController.stream;
   }
@@ -206,7 +242,7 @@ class DataProvider {
     required Habit habit,
     required bool isCompletedToday,
   }) async {
-    await _loadHabits();
+    await _loadLocalCache();
     if (habit.id.isEmpty) {
       return;
     }
@@ -232,12 +268,12 @@ class DataProvider {
       isCompletedToday: isCompletedToday,
     );
 
-    await _persistHabits();
-    _emitHabits();
+    await _saveLocalHabits();
+    _triggerRemoteSync();
   }
 
   Future<void> addRoutine(Routine routine) async {
-    await _loadRoutines();
+    await _loadLocalCache();
     final routineId = routine.id.isEmpty ? _generateId() : routine.id;
     final normalizedRoutine = Routine(
       id: routineId,
@@ -254,12 +290,12 @@ class DataProvider {
     } else {
       _routines.add(normalizedRoutine);
     }
-    await _persistRoutines();
-    _emitRoutines();
+    await _saveLocalRoutines();
+    _triggerRemoteSync();
   }
 
   Stream<List<Routine>> watchRoutines() async* {
-    await _loadRoutines();
+    await _loadLocalCache();
     yield List.unmodifiable(_routines);
     yield* _routinesController.stream;
   }
@@ -296,7 +332,7 @@ class DataProvider {
   }
 
   Future<void> addGoal(Goal goal) async {
-    await _loadGoals();
+    await _loadLocalCache();
     final goalId = goal.id.isEmpty ? _generateId() : goal.id;
     final normalizedGoal = Goal(
       id: goalId,
@@ -313,12 +349,12 @@ class DataProvider {
     } else {
       _goals.add(normalizedGoal);
     }
-    await _persistGoals();
-    _emitGoals();
+    await _saveLocalGoals();
+    _triggerRemoteSync();
   }
 
   Stream<List<Goal>> watchGoals() async* {
-    await _loadGoals();
+    await _loadLocalCache();
     yield List.unmodifiable(_goals);
     yield* _goalsController.stream;
   }
@@ -326,7 +362,7 @@ class DataProvider {
   Future<void> updateGoalMilestones({
     required Goal goal,
   }) async {
-    await _loadGoals();
+    await _loadLocalCache();
     if (goal.id.isEmpty) {
       return;
     }
@@ -346,7 +382,7 @@ class DataProvider {
       milestones: goal.milestones,
     );
 
-    await _persistGoals();
-    _emitGoals();
+    await _saveLocalGoals();
+    _triggerRemoteSync();
   }
 }

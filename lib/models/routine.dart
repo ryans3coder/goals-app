@@ -22,11 +22,12 @@ class Routine {
       title: (map['title'] as String?) ?? '',
       icon: (map['icon'] as String?) ?? '',
       triggerTime: (map['triggerTime'] as String?) ?? '',
-      steps: (map['steps'] as List<dynamic>?)
-              ?.map((value) => value.toString())
-              .toList() ??
-          const [],
+      steps: _parseSteps(map['steps']),
     );
+  }
+
+  factory Routine.fromJson(Map<String, dynamic> json, {String? id}) {
+    return Routine.fromMap(json, id: id);
   }
 
   Map<String, dynamic> toMap() {
@@ -38,5 +39,16 @@ class Routine {
       'triggerTime': triggerTime,
       'steps': steps,
     };
+  }
+
+  Map<String, dynamic> toJson() {
+    return toMap();
+  }
+
+  static List<String> _parseSteps(dynamic value) {
+    if (value is List) {
+      return value.map((item) => item.toString()).toList();
+    }
+    return const [];
   }
 }

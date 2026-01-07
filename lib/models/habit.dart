@@ -20,13 +20,14 @@ class Habit {
       id: (map['id'] as String?) ?? id ?? '',
       userId: (map['userId'] as String?) ?? '',
       title: (map['title'] as String?) ?? '',
-      frequency: (map['frequency'] as List<dynamic>?)
-              ?.map((value) => value.toString())
-              .toList() ??
-          const [],
+      frequency: _parseFrequency(map['frequency']),
       currentStreak: (map['currentStreak'] as num?)?.toInt() ?? 0,
       isCompletedToday: (map['isCompletedToday'] as bool?) ?? false,
     );
+  }
+
+  factory Habit.fromJson(Map<String, dynamic> json, {String? id}) {
+    return Habit.fromMap(json, id: id);
   }
 
   Map<String, dynamic> toMap() {
@@ -38,5 +39,16 @@ class Habit {
       'currentStreak': currentStreak,
       'isCompletedToday': isCompletedToday,
     };
+  }
+
+  Map<String, dynamic> toJson() {
+    return toMap();
+  }
+
+  static List<String> _parseFrequency(dynamic value) {
+    if (value is List) {
+      return value.map((item) => item.toString()).toList();
+    }
+    return const [];
   }
 }
