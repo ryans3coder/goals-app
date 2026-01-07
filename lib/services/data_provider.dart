@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' hide Category;
 
 import '../data/local/local_persistence.dart';
 import '../domain/use_cases/category_use_cases.dart';
