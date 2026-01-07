@@ -1,86 +1,70 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/goal.dart';
 import '../models/habit.dart';
+import '../models/milestone.dart';
 import '../models/routine.dart';
-
-typedef RemoteSync = Future<void> Function(Map<String, dynamic> payload);
+import 'local_data_store.dart';
+import 'remote_sync_service.dart';
 
 class DataProvider extends ChangeNotifier {
-  DataProvider({SharedPreferences? preferences, RemoteSync? remoteSync})
-      : _preferences = preferences,
-        _remoteSync = remoteSync,
+  DataProvider({
+    LocalDataStore? localStore,
+    RemoteSyncService? remoteSync,
+  })  : _localStore = localStore ?? LocalDataStore(),
+        _remoteSync = remoteSync ?? NoopRemoteSyncService(),
         _random = Random() {
-    unawaited(_initializeLocal());
+    _loadFuture = _loadLocalCache();
   }
 
-  final SharedPreferences? _preferences;
-  final RemoteSync? _remoteSync;
+  final LocalDataStore _localStore;
+  final RemoteSyncService _remoteSync;
   final Random _random;
-
-  static const _habitsKey = 'local_habits';
-  static const _routinesKey = 'local_routines';
-  static const _goalsKey = 'local_goals';
-  static const _routineHistoryKey = 'local_routine_history';
 
   final _habitsController = StreamController<List<Habit>>.broadcast();
   final _routinesController = StreamController<List<Routine>>.broadcast();
   final _goalsController = StreamController<List<Goal>>.broadcast();
 
-  SharedPreferences? _resolvedPreferences;
-  bool _localLoaded = false;
-
   final List<Habit> _habits = [];
   final List<Routine> _routines = [];
   final List<Goal> _goals = [];
 
-  Future<void> _initializeLocal() async {
-    await _loadLocalCache();
+  late final Future<void> _loadFuture;
+  Future<void> _writeQueue = Future.value();
+  bool _disposed = false;
+
+  Future<void> _loadLocalCache() async {
+    try {
+      final snapshot = await _localStore.loadSnapshot();
+      _hydrate(snapshot);
+      _emitAll();
+      notifyListeners();
+    } catch (error) {
+      debugPrint('Falha ao carregar dados locais: $error');
+    }
   }
 
-  Future<SharedPreferences> _getPreferences() async {
-    if (_resolvedPreferences != null) {
-      return _resolvedPreferences!;
-    }
-    _resolvedPreferences =
-        _preferences ?? await SharedPreferences.getInstance();
-    return _resolvedPreferences!;
+  Future<void> _ensureLoaded() => _loadFuture;
+
+  void _hydrate(LocalSnapshot snapshot) {
+    _habits
+      ..clear()
+      ..addAll(snapshot.habits.map(_cloneHabit));
+    _routines
+      ..clear()
+      ..addAll(snapshot.routines.map(_cloneRoutine));
+    _goals
+      ..clear()
+      ..addAll(snapshot.goals.map(_cloneGoal));
   }
 
   String _generateId() {
     final timestamp = DateTime.now().microsecondsSinceEpoch;
     final randomSuffix = _random.nextInt(1000000).toString().padLeft(6, '0');
     return '$timestamp$randomSuffix';
-  }
-
-  Future<void> _loadLocalCache() async {
-    if (_localLoaded) {
-      return;
-    }
-    _localLoaded = true;
-
-    final preferences = await _getPreferences();
-    final habitsRaw = preferences.getString(_habitsKey);
-    final routinesRaw = preferences.getString(_routinesKey);
-    final goalsRaw = preferences.getString(_goalsKey);
-
-    _habits
-      ..clear()
-      ..addAll(_decodeHabits(habitsRaw));
-    _routines
-      ..clear()
-      ..addAll(_decodeRoutines(routinesRaw));
-    _goals
-      ..clear()
-      ..addAll(_decodeGoals(goalsRaw));
-
-    _emitAll();
-    notifyListeners();
   }
 
   void _emitAll() {
@@ -90,128 +74,99 @@ class DataProvider extends ChangeNotifier {
   }
 
   void _emitHabits() {
-    _habitsController.add(List.unmodifiable(_habits));
+    if (_habitsController.isClosed) {
+      return;
+    }
+    _habitsController.add(List.unmodifiable(_habits.map(_cloneHabit)));
   }
 
   void _emitRoutines() {
-    _routinesController.add(List.unmodifiable(_routines));
+    if (_routinesController.isClosed) {
+      return;
+    }
+    _routinesController.add(List.unmodifiable(_routines.map(_cloneRoutine)));
   }
 
   void _emitGoals() {
-    _goalsController.add(List.unmodifiable(_goals));
-  }
-
-  List<Habit> _decodeHabits(String? raw) {
-    if (raw == null || raw.isEmpty) {
-      return [];
+    if (_goalsController.isClosed) {
+      return;
     }
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is! List) {
-        return [];
-      }
-      return decoded
-          .whereType<Map>()
-          .map((item) => Habit.fromMap(Map<String, dynamic>.from(item)))
-          .toList();
-    } catch (_) {
-      return [];
+    _goalsController.add(List.unmodifiable(_goals.map(_cloneGoal)));
+  }
+
+  Future<void> _saveLocalState() async {
+    if (_disposed) {
+      return;
     }
-  }
-
-  List<Routine> _decodeRoutines(String? raw) {
-    if (raw == null || raw.isEmpty) {
-      return [];
-    }
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is! List) {
-        return [];
-      }
-      return decoded
-          .whereType<Map>()
-          .map((item) => Routine.fromMap(Map<String, dynamic>.from(item)))
-          .toList();
-    } catch (_) {
-      return [];
-    }
-  }
-
-  List<Goal> _decodeGoals(String? raw) {
-    if (raw == null || raw.isEmpty) {
-      return [];
-    }
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is! List) {
-        return [];
-      }
-      return decoded
-          .whereType<Map>()
-          .map((item) => Goal.fromMap(Map<String, dynamic>.from(item)))
-          .toList();
-    } catch (_) {
-      return [];
-    }
-  }
-
-  Future<void> _persistHabits() async {
-    final preferences = await _getPreferences();
-    final encoded = jsonEncode(_habits.map((habit) => habit.toMap()).toList());
-    await preferences.setString(_habitsKey, encoded);
-  }
-
-  Future<void> _persistRoutines() async {
-    final preferences = await _getPreferences();
-    final encoded =
-        jsonEncode(_routines.map((routine) => routine.toMap()).toList());
-    await preferences.setString(_routinesKey, encoded);
-  }
-
-  Future<void> _persistGoals() async {
-    final preferences = await _getPreferences();
-    final encoded = jsonEncode(_goals.map((goal) => goal.toMap()).toList());
-    await preferences.setString(_goalsKey, encoded);
-  }
-
-  Future<void> _saveLocalHabits() async {
-    _emitHabits();
+    _emitAll();
     notifyListeners();
-    await _persistHabits();
+    await _queuePersist();
   }
 
-  Future<void> _saveLocalRoutines() async {
-    _emitRoutines();
-    notifyListeners();
-    await _persistRoutines();
+  Future<void> _queuePersist() {
+    _writeQueue = _writeQueue.then((_) => _persistSnapshot());
+    return _writeQueue;
   }
 
-  Future<void> _saveLocalGoals() async {
-    _emitGoals();
-    notifyListeners();
-    await _persistGoals();
+  Future<void> _persistSnapshot() async {
+    await _localStore.saveSnapshot(_snapshot());
   }
 
-  void _triggerRemoteSync() {
-    unawaited(_syncRemote());
+  void _scheduleRemoteSync() {
+    final snapshot = _snapshot();
+    unawaited(_remoteSync.enqueueSync(snapshot));
   }
 
-  Future<void> _syncRemote() async {
-    try {
-      final remoteSync = _remoteSync;
-      if (remoteSync == null) {
-        return;
-      }
-      await remoteSync({
-        'habits': _habits.map((habit) => habit.toMap()).toList(),
-        'routines': _routines.map((routine) => routine.toMap()).toList(),
-        'goals': _goals.map((goal) => goal.toMap()).toList(),
-      });
-    } catch (_) {}
+  LocalSnapshot _snapshot() {
+    return LocalSnapshot(
+      habits: _habits.map(_cloneHabit).toList(),
+      routines: _routines.map(_cloneRoutine).toList(),
+      goals: _goals.map(_cloneGoal).toList(),
+    );
+  }
+
+  Habit _cloneHabit(Habit habit) {
+    return Habit(
+      id: habit.id,
+      userId: habit.userId,
+      title: habit.title,
+      frequency: habit.frequency,
+      currentStreak: habit.currentStreak,
+      isCompletedToday: habit.isCompletedToday,
+    );
+  }
+
+  Routine _cloneRoutine(Routine routine) {
+    return Routine(
+      id: routine.id,
+      userId: routine.userId,
+      title: routine.title,
+      icon: routine.icon,
+      triggerTime: routine.triggerTime,
+      steps: routine.steps,
+    );
+  }
+
+  Milestone _cloneMilestone(Milestone milestone) {
+    return Milestone(
+      title: milestone.title,
+      isCompleted: milestone.isCompleted,
+    );
+  }
+
+  Goal _cloneGoal(Goal goal) {
+    return Goal(
+      id: goal.id,
+      userId: goal.userId,
+      title: goal.title,
+      reason: goal.reason,
+      deadline: goal.deadline,
+      milestones: goal.milestones.map(_cloneMilestone).toList(),
+    );
   }
 
   Future<void> addHabit(Habit habit) async {
-    await _loadLocalCache();
+    await _ensureLoaded();
     final habitId = habit.id.isEmpty ? _generateId() : habit.id;
     final normalizedHabit = Habit(
       id: habitId,
@@ -228,13 +183,13 @@ class DataProvider extends ChangeNotifier {
     } else {
       _habits.add(normalizedHabit);
     }
-    await _saveLocalHabits();
-    _triggerRemoteSync();
+    await _saveLocalState();
+    _scheduleRemoteSync();
   }
 
   Stream<List<Habit>> watchHabits() async* {
-    await _loadLocalCache();
-    yield List.unmodifiable(_habits);
+    await _ensureLoaded();
+    yield List.unmodifiable(_habits.map(_cloneHabit));
     yield* _habitsController.stream;
   }
 
@@ -242,7 +197,7 @@ class DataProvider extends ChangeNotifier {
     required Habit habit,
     required bool isCompletedToday,
   }) async {
-    await _loadLocalCache();
+    await _ensureLoaded();
     if (habit.id.isEmpty) {
       return;
     }
@@ -268,12 +223,12 @@ class DataProvider extends ChangeNotifier {
       isCompletedToday: isCompletedToday,
     );
 
-    await _saveLocalHabits();
-    _triggerRemoteSync();
+    await _saveLocalState();
+    _scheduleRemoteSync();
   }
 
   Future<void> addRoutine(Routine routine) async {
-    await _loadLocalCache();
+    await _ensureLoaded();
     final routineId = routine.id.isEmpty ? _generateId() : routine.id;
     final normalizedRoutine = Routine(
       id: routineId,
@@ -290,13 +245,13 @@ class DataProvider extends ChangeNotifier {
     } else {
       _routines.add(normalizedRoutine);
     }
-    await _saveLocalRoutines();
-    _triggerRemoteSync();
+    await _saveLocalState();
+    _scheduleRemoteSync();
   }
 
   Stream<List<Routine>> watchRoutines() async* {
-    await _loadLocalCache();
-    yield List.unmodifiable(_routines);
+    await _ensureLoaded();
+    yield List.unmodifiable(_routines.map(_cloneRoutine));
     yield* _routinesController.stream;
   }
 
@@ -304,35 +259,16 @@ class DataProvider extends ChangeNotifier {
     required Routine routine,
     DateTime? completedAt,
   }) async {
-    final preferences = await _getPreferences();
-    final raw = preferences.getString(_routineHistoryKey);
-    final historyList = <Map<String, dynamic>>[];
-    if (raw != null && raw.isNotEmpty) {
-      try {
-        final decoded = jsonDecode(raw);
-        if (decoded is List) {
-          for (final item in decoded) {
-            if (item is Map) {
-              historyList.add(Map<String, dynamic>.from(item));
-            }
-          }
-        }
-      } catch (_) {}
-    }
-
-    historyList.add({
-      'id': _generateId(),
-      'routineId': routine.id,
-      'routineTitle': routine.title,
-      'completedAt': (completedAt ?? DateTime.now()).toIso8601String(),
-      'steps': routine.steps,
-    });
-
-    await preferences.setString(_routineHistoryKey, jsonEncode(historyList));
+    await _ensureLoaded();
+    await _localStore.addRoutineHistory(
+      routine: routine,
+      completedAt: completedAt,
+      historyId: _generateId(),
+    );
   }
 
   Future<void> addGoal(Goal goal) async {
-    await _loadLocalCache();
+    await _ensureLoaded();
     final goalId = goal.id.isEmpty ? _generateId() : goal.id;
     final normalizedGoal = Goal(
       id: goalId,
@@ -340,7 +276,7 @@ class DataProvider extends ChangeNotifier {
       title: goal.title,
       reason: goal.reason,
       deadline: goal.deadline,
-      milestones: goal.milestones,
+      milestones: goal.milestones.map(_cloneMilestone).toList(),
     );
 
     final index = _goals.indexWhere((item) => item.id == goalId);
@@ -349,20 +285,20 @@ class DataProvider extends ChangeNotifier {
     } else {
       _goals.add(normalizedGoal);
     }
-    await _saveLocalGoals();
-    _triggerRemoteSync();
+    await _saveLocalState();
+    _scheduleRemoteSync();
   }
 
   Stream<List<Goal>> watchGoals() async* {
-    await _loadLocalCache();
-    yield List.unmodifiable(_goals);
+    await _ensureLoaded();
+    yield List.unmodifiable(_goals.map(_cloneGoal));
     yield* _goalsController.stream;
   }
 
   Future<void> updateGoalMilestones({
     required Goal goal,
   }) async {
-    await _loadLocalCache();
+    await _ensureLoaded();
     if (goal.id.isEmpty) {
       return;
     }
@@ -379,10 +315,19 @@ class DataProvider extends ChangeNotifier {
       title: currentGoal.title,
       reason: currentGoal.reason,
       deadline: currentGoal.deadline,
-      milestones: goal.milestones,
+      milestones: goal.milestones.map(_cloneMilestone).toList(),
     );
 
-    await _saveLocalGoals();
-    _triggerRemoteSync();
+    await _saveLocalState();
+    _scheduleRemoteSync();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _habitsController.close();
+    _routinesController.close();
+    _goalsController.close();
+    super.dispose();
   }
 }
