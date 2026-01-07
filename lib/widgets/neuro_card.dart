@@ -4,7 +4,7 @@ class NeuroCard extends StatelessWidget {
   const NeuroCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(20),
+    this.padding = const EdgeInsets.all(24),
     this.onTap,
   });
 
@@ -15,7 +15,7 @@ class NeuroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const borderRadius = BorderRadius.all(Radius.circular(16));
+    const borderRadius = BorderRadius.all(Radius.circular(20));
 
     return Material(
       color: Colors.transparent,
@@ -26,6 +26,7 @@ class NeuroCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: theme.cardColor,
             borderRadius: borderRadius,
+            border: Border.all(color: Colors.white12),
             boxShadow: [
               BoxShadow(
                 color: theme.shadowColor.withOpacity(0.2),
