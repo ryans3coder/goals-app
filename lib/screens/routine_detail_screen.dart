@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../domain/time_formatter.dart';
 import '../models/habit.dart';
 import '../models/routine.dart';
 import '../models/routine_step.dart';
@@ -265,7 +266,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                         );
 
                     if (!updated) {
-                      _showSnack('Não foi possível atualizar a duração.');
+                      _showSnack(AppStrings.routineStepDurationUpdateError);
                       return;
                     }
 
@@ -289,8 +290,8 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remover passo'),
-        content: const Text('Deseja remover este passo da rotina?'),
+        title: const Text(AppStrings.routineStepRemoveTitle),
+        content: const Text(AppStrings.routineStepRemoveMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -298,7 +299,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Remover'),
+            child: const Text(AppStrings.routineStepRemoveAction),
           ),
         ],
       ),
@@ -310,16 +311,6 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
     if (result == true) {
       await context.read<DataProvider>().deleteRoutineStep(step);
     }
-  }
-
-  String _formatDurationLabel(int durationSeconds) {
-    if (durationSeconds <= 0) {
-      return 'Definir duração';
-    }
-    final duration = Duration(seconds: durationSeconds);
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -415,7 +406,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                           final habit = habitLookup[step.habitId];
                           final title =
                               '${habit?.emoji.isNotEmpty == true ? habit!.emoji : '•'} '
-                              '${habit?.title ?? 'Hábito removido'}';
+                              '${habit?.title ?? AppStrings.routineRunHabitRemoved}';
                           return Padding(
                             key: ValueKey(step.id),
                             padding:
@@ -453,8 +444,10 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                                         ),
                                         const SizedBox(height: AppSpacing.xs),
                                         Text(
-                                          _formatDurationLabel(
+                                          formatDurationSecondsLabel(
                                             step.durationSeconds,
+                                            zeroLabel:
+                                                AppStrings.routineStepDurationUnset,
                                           ),
                                           style: theme.textTheme.bodyMedium
                                               ?.copyWith(
@@ -473,7 +466,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                                   IconButton(
                                     onPressed: () => _confirmRemoveStep(step),
                                     icon: const Icon(Icons.delete_outline),
-                                    tooltip: 'Remover passo',
+                                    tooltip: AppStrings.routineStepRemoveTitle,
                                   ),
                                 ],
                               ),

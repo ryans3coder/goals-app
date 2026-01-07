@@ -75,6 +75,14 @@ class AppStrings {
   static const String routineRunBackgroundPause =
       'Ao sair do app, a rotina é pausada automaticamente.';
   static const String routineRunStartAction = 'Iniciar rotina';
+  static const String routineRunHabitRemoved = 'Hábito removido';
+  static const String routineStepRemoveTitle = 'Remover passo';
+  static const String routineStepRemoveMessage =
+      'Deseja remover este passo da rotina?';
+  static const String routineStepRemoveAction = 'Remover';
+  static const String routineStepDurationUpdateError =
+      'Não foi possível atualizar a duração.';
+  static const String routineStepDurationUnset = 'Definir duração';
   static const String feedbackPreferencesTitle = 'Feedback de conclusão';
   static const String feedbackPreferencesHint =
       'Escolha como receber o feedback ao concluir rotinas.';
