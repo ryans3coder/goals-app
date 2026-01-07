@@ -83,6 +83,27 @@ class AppStrings {
   static const String routineStepDurationUpdateError =
       'Não foi possível atualizar a duração.';
   static const String routineStepDurationUnset = 'Definir duração';
+  static const String statsTitle = 'Estatísticas';
+  static const String statsStreakTitle = 'Streak diário';
+  static const String statsStreakLabel = 'Dias seguidos';
+  static const String statsStreakRule =
+      'Dia considerado de 00:00 a 23:59 no fuso local.';
+  static const String statsTotalXpLabel = 'XP total';
+  static const String statsSuccessTitle = 'Taxa de sucesso';
+  static const String statsLast7Days = 'Últimos 7 dias';
+  static const String statsLast30Days = 'Últimos 30 dias';
+  static const String statsSuccessUnit = 'concluídas/iniciadas';
+  static const String statsLast7DaysSummaryTitle = 'Resumo dos últimos 7 dias';
+  static const String statsXpUnit = 'XP';
+  static const String statsShortcutHint =
+      'Veja seu streak, XP e taxa de sucesso.';
+  static const String statsEmptyTitle = 'Sem estatísticas ainda';
+  static const String statsEmptyMessage =
+      'Complete uma rotina para começar a ver seu progresso.';
+  static const String statsLoadErrorTitle =
+      'Não foi possível carregar as estatísticas.';
+  static const String statsLoadErrorMessage =
+      'Tente novamente em alguns instantes.';
   static const String feedbackPreferencesTitle = 'Feedback de conclusão';
   static const String feedbackPreferencesHint =
       'Escolha como receber o feedback ao concluir rotinas.';

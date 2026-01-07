@@ -16,6 +16,7 @@ import '../theme/app_strings.dart';
 import 'goal_wizard.dart';
 import 'habit_categories_screen.dart';
 import 'habit_form_screen.dart';
+import 'stats_screen.dart';
 import 'routine_detail_screen.dart';
 import '../widgets/app_buttons.dart';
 import '../widgets/app_card.dart';
@@ -37,7 +38,6 @@ class _MainScreenState extends State<MainScreen> {
   static const _routinesTabIndex = 1;
   static const _goalsTabIndex = 2;
   static const _profileTabIndex = 3;
-
   static const _tabs = [
     _TabData('Hábitos', Icons.check_circle_outline),
     _TabData('Rotinas', Icons.schedule),
@@ -658,6 +658,34 @@ class _MainScreenState extends State<MainScreen> {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const HabitCategoriesScreen(),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    sections.add(
+      AppCard(
+        child: ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            AppStrings.statsTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          subtitle: Text(
+            AppStrings.statsShortcutHint,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textMuted,
+            ),
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const StatsScreen(),
               ),
             );
           },
