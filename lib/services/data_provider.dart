@@ -8,15 +8,23 @@ import '../models/routine.dart';
 class DataProvider {
   DataProvider({FirebaseFirestore? firestore, FirebaseAuth? firebaseAuth})
       : _firestore = firestore ?? FirebaseFirestore.instance,
-        _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+        _firebaseAuth = firebaseAuth ?? _tryGetFirebaseAuth();
 
   final FirebaseFirestore _firestore;
-  final FirebaseAuth _firebaseAuth;
+  final FirebaseAuth? _firebaseAuth;
+
+  static FirebaseAuth? _tryGetFirebaseAuth() {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   String get _userId {
-    final user = _firebaseAuth.currentUser;
+    final user = _firebaseAuth?.currentUser;
     if (user == null) {
-      throw StateError('Usuário não autenticado.');
+      return 'guest';
     }
     return user.uid;
   }

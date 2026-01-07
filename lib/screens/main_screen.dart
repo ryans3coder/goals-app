@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -25,12 +26,13 @@ class _MainScreenState extends State<MainScreen> {
   static const _habitsTabIndex = 0;
   static const _routinesTabIndex = 1;
   static const _goalsTabIndex = 2;
+  static const _profileTabIndex = 3;
 
   static const _tabs = [
     _TabData('Hábitos', Icons.check_circle_outline),
     _TabData('Rotinas', Icons.schedule),
     _TabData('Metas', Icons.flag),
-    _TabData('Estatísticas', Icons.bar_chart),
+    _TabData('Perfil', Icons.person_outline),
   ];
 
   void _showCreateModal() {
@@ -463,6 +465,101 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  Widget _buildProfileTab() {
+    final theme = Theme.of(context);
+    final user = context.watch<firebase_auth.User?>();
+    final authService = context.read<AuthService>();
+
+    if (user == null) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: NeuroCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Proteja seus dados',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Faça login para salvar seu progresso e sincronizar em todos os dispositivos.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.mutedText,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    try {
+                      await authService.signInWithGoogle();
+                    } on StateError catch (error) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(error.message)),
+                        );
+                      }
+                    } catch (_) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content:
+                                Text('Não foi possível autenticar agora.'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.login),
+                  label: const Text('Entrar com Google'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: NeuroCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              user.displayName ?? 'Usuário conectado',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              user.email ?? 'Email não informado',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppTheme.mutedText,
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  await authService.signOut();
+                },
+                icon: const Icon(Icons.logout),
+                label: const Text('Sair'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final activeTab = _tabs[_currentIndex];
@@ -481,6 +578,9 @@ class _MainScreenState extends State<MainScreen> {
       case _goalsTabIndex:
         body = _buildGoalsTab();
         break;
+      case _profileTabIndex:
+        body = _buildProfileTab();
+        break;
       default:
         body = _buildPlaceholder(activeTab.label);
     }
@@ -488,12 +588,6 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(activeTab.label),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => context.read<AuthService>().signOut(),
-          ),
-        ],
       ),
       body: body,
       floatingActionButton: showFab
