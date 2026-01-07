@@ -33,6 +33,9 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
   }
 
   void _showSnack(String message) {
+    if (!mounted) {
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
@@ -301,6 +304,9 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
       ),
     );
 
+    if (!mounted) {
+      return;
+    }
     if (result == true) {
       await context.read<DataProvider>().deleteRoutineStep(step);
     }
@@ -330,167 +336,204 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: Icon(Icons.arrow_back,
-                          color: theme.colorScheme.onSurface),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        widget.routine.title,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textMuted,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.xl,
+                AppSpacing.xl,
+                AppSpacing.sm,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: theme.colorScheme.onSurface,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          widget.routine.title,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textMuted,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    'Passos da rotina',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                child: hasSteps
+                    ? ReorderableListView.builder(
+                        buildDefaultDragHandles: false,
+                        padding: EdgeInsets.zero,
+                        proxyDecorator: (child, index, animation) {
+                          return Material(
+                            color: Colors.transparent,
+                            elevation: 6,
+                            shadowColor: theme.colorScheme.shadow,
+                            child: child,
+                          );
+                        },
+                        itemCount: steps.length,
+                        onReorder: (oldIndex, newIndex) async {
+                          if (newIndex > oldIndex) {
+                            newIndex -= 1;
+                          }
+                          await context.read<DataProvider>().reorderRoutineSteps(
+                                routineId: widget.routine.id,
+                                oldIndex: oldIndex,
+                                newIndex: newIndex,
+                              );
+                        },
+                        itemBuilder: (context, index) {
+                          final step = steps[index];
+                          final habit = habitLookup[step.habitId];
+                          final title =
+                              '${habit?.emoji.isNotEmpty == true ? habit!.emoji : '•'} '
+                              '${habit?.title ?? 'Hábito removido'}';
+                          return Padding(
+                            key: ValueKey(step.id),
+                            padding:
+                                const EdgeInsets.only(bottom: AppSpacing.sm),
+                            child: Container(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: theme
+                                    .colorScheme.surfaceContainerHighest,
+                                borderRadius:
+                                    BorderRadius.circular(AppSpacing.lg),
+                              ),
+                              child: Row(
+                                children: [
+                                  ReorderableDragStartListener(
+                                    index: index,
+                                    child: Icon(
+                                      Icons.drag_handle,
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          title,
+                                          style: theme.textTheme.bodyLarge
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: AppSpacing.xs),
+                                        Text(
+                                          _formatDurationLabel(
+                                            step.durationSeconds,
+                                          ),
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                            color: AppColors.textMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () =>
+                                        _showEditDurationSheet(step),
+                                    icon: const Icon(Icons.edit_outlined),
+                                    tooltip: 'Editar duração',
+                                  ),
+                                  IconButton(
+                                    onPressed: () => _confirmRemoveStep(step),
+                                    icon: const Icon(Icons.delete_outline),
+                                    tooltip: 'Remover passo',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          Text(
+                            'Nenhum passo adicionado.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.md,
+                  AppSpacing.xl,
+                  AppSpacing.xl,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppSecondaryButton(
+                      label: 'Adicionar passo',
+                      onPressed: () => _showAddStepSheet(
+                        habits: habits,
+                        existingSteps: steps,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    AppPrimaryButton(
+                      label: AppStrings.routineRunStartAction,
+                      onPressed: () => _openRunMode(steps),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      hasSteps
+                          ? 'Passos configurados: ${steps.length}'
+                          : AppStrings.routineRunNoStepsTitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  'Passos da rotina',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                if (!hasSteps)
-                  Text(
-                    'Nenhum passo adicionado.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textMuted,
-                    ),
-                  )
-                else
-                  ReorderableListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    buildDefaultDragHandles: false,
-                    padding: EdgeInsets.zero,
-                    proxyDecorator: (child, index, animation) {
-                      return Material(
-                        color: Colors.transparent,
-                        elevation: 6,
-                        shadowColor: theme.colorScheme.shadow,
-                        child: child,
-                      );
-                    },
-                    itemCount: steps.length,
-                    onReorder: (oldIndex, newIndex) async {
-                      if (newIndex > oldIndex) {
-                        newIndex -= 1;
-                      }
-                      await context.read<DataProvider>().reorderRoutineSteps(
-                            routineId: widget.routine.id,
-                            oldIndex: oldIndex,
-                            newIndex: newIndex,
-                          );
-                    },
-                    itemBuilder: (context, index) {
-                      final step = steps[index];
-                      final habit = habitLookup[step.habitId];
-                      final title =
-                          '${habit?.emoji.isNotEmpty == true ? habit!.emoji : '•'} '
-                          '${habit?.title ?? 'Hábito removido'}';
-                      return Padding(
-                        key: ValueKey(step.id),
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: Container(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest,
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.lg),
-                          ),
-                          child: Row(
-                            children: [
-                              ReorderableDragStartListener(
-                                index: index,
-                                child: Icon(
-                                  Icons.drag_handle,
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      title,
-                                      style:
-                                          theme.textTheme.bodyLarge?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: AppSpacing.xs),
-                                    Text(
-                                      _formatDurationLabel(
-                                        step.durationSeconds,
-                                      ),
-                                      style:
-                                          theme.textTheme.bodyMedium?.copyWith(
-                                        color: AppColors.textMuted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () => _showEditDurationSheet(step),
-                                icon: const Icon(Icons.edit_outlined),
-                                tooltip: 'Editar duração',
-                              ),
-                              IconButton(
-                                onPressed: () => _confirmRemoveStep(step),
-                                icon: const Icon(Icons.delete_outline),
-                                tooltip: 'Remover passo',
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                const SizedBox(height: AppSpacing.lg),
-                AppSecondaryButton(
-                  label: 'Adicionar passo',
-                  onPressed: () => _showAddStepSheet(
-                    habits: habits,
-                    existingSteps: steps,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                AppPrimaryButton(
-                  label: AppStrings.routineRunStartAction,
-                  onPressed: () => _openRunMode(steps),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                Text(
-                  hasSteps
-                      ? 'Passos configurados: ${steps.length}'
-                      : AppStrings.routineRunNoStepsTitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
