@@ -63,8 +63,8 @@ class _MainScreenState extends State<MainScreen> {
                 children: [
                   Text(
                     'Criar novo',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -166,23 +166,35 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Widget _buildPlaceholder(String label) {
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required String message,
+  }) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: NeuroCard(
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Icon(
+              icon,
+              size: 80,
+              color: Colors.grey.shade700,
+            ),
+            const SizedBox(height: 20),
             Text(
-              label,
+              title,
+              textAlign: TextAlign.center,
               style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Em breve você verá seus dados aqui.',
+              message,
+              textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppTheme.mutedText,
               ),
@@ -205,7 +217,11 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         if (habits.isEmpty) {
-          return _buildPlaceholder('Sem hábitos por enquanto.');
+          return _buildEmptyState(
+            icon: Icons.self_improvement,
+            title: 'Sem hábitos por enquanto.',
+            message: 'Comece criando seu primeiro hábito diário.',
+          );
         }
 
         return ListView.separated(
@@ -247,17 +263,17 @@ class _MainScreenState extends State<MainScreen> {
                                 horizontal: 16,
                                 vertical: 10,
                               ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.success.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.check_circle, size: 18),
-                                SizedBox(width: 8),
-                                Text('Feito'),
-                              ],
-                            ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.success.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.check_circle, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Feito'),
+                                ],
+                              ),
                             )
                           : ElevatedButton(
                               key: const ValueKey('check'),
@@ -294,7 +310,11 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         if (routines.isEmpty) {
-          return _buildPlaceholder('Sem rotinas por enquanto.');
+          return _buildEmptyState(
+            icon: Icons.nights_stay_outlined,
+            title: 'Sem rotinas por enquanto.',
+            message: 'Crie uma rotina para manter o foco no dia.',
+          );
         }
 
         return ListView.separated(
@@ -350,7 +370,11 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         if (goals.isEmpty) {
-          return _buildPlaceholder('Sem metas por enquanto.');
+          return _buildEmptyState(
+            icon: Icons.emoji_events_outlined,
+            title: 'Sem metas por enquanto.',
+            message: 'Defina uma meta e acompanhe seu progresso.',
+          );
         }
 
         return ListView.separated(
@@ -479,8 +503,8 @@ class _MainScreenState extends State<MainScreen> {
             children: [
               Text(
                 'Proteja seus dados',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 12),
@@ -532,8 +556,8 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             Text(
               user.displayName ?? 'Usuário conectado',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 8),
@@ -582,20 +606,29 @@ class _MainScreenState extends State<MainScreen> {
         body = _buildProfileTab();
         break;
       default:
-        body = _buildPlaceholder(activeTab.label);
+        body = _buildEmptyState(
+          icon: activeTab.icon,
+          title: activeTab.label,
+          message: 'Em breve você verá seus dados aqui.',
+        );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(activeTab.label),
+        title: Text(
+          activeTab.label,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+        ),
       ),
       body: body,
       floatingActionButton: showFab
-          ? FloatingActionButton(
+          ? FloatingActionButton.large(
               onPressed: _currentIndex == _goalsTabIndex
                   ? _showGoalWizard
                   : _showCreateModal,
-              child: const Icon(Icons.add),
+              child: const Icon(Icons.add, size: 32),
             )
           : null,
       bottomNavigationBar: BottomNavigationBar(

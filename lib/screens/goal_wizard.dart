@@ -298,8 +298,8 @@ class _GoalWizardState extends State<GoalWizard> {
         children: [
           Text(
             'Adicionar Meta',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 12),
