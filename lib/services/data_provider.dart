@@ -491,6 +491,11 @@ class DataProvider extends ChangeNotifier {
     return _routineEventRepository.fetchByType(type);
   }
 
+  Future<List<RoutineEvent>> fetchRoutineEvents() async {
+    await _ensureLoaded();
+    return _routineEventRepository.fetchAll();
+  }
+
   String _buildRoutineEventDedupeKey({
     required RoutineEventType type,
     required String routineId,
