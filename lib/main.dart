@@ -3,9 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'services/auth_service.dart';
 import 'services/data_provider.dart';
 import 'theme/app_theme.dart';
@@ -37,23 +38,37 @@ class NeuroSyncApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
-        home: const AuthGate(),
+        home: const StartupGate(),
       ),
     );
   }
 }
 
-class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
+class StartupGate extends StatelessWidget {
+  const StartupGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<firebase_auth.User?>();
+    return FutureBuilder<bool>(
+      future: _hasSeenOnboarding(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    if (user == null) {
-      return const LoginScreen();
-    }
+        if (snapshot.data ?? false) {
+          return const MainScreen();
+        }
 
-    return const MainScreen();
+        return const OnboardingScreen();
+      },
+    );
+  }
+
+  Future<bool> _hasSeenOnboarding() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getBool('hasSeenOnboarding') ?? false;
   }
 }
