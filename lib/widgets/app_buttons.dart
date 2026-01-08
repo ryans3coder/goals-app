@@ -84,7 +84,25 @@ class AppPrimaryButton extends StatelessWidget {
       return button;
     }
 
-    return SizedBox(width: double.infinity, child: button);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        assert(() {
+          if (!constraints.hasBoundedWidth) {
+            throw FlutterError(
+              'AppPrimaryButton com largura total precisa de largura finita. '
+              'Envolva com SizedBox/Expanded.',
+            );
+          }
+          return true;
+        }());
+
+        if (!constraints.hasBoundedWidth) {
+          return button;
+        }
+
+        return SizedBox(width: constraints.maxWidth, child: button);
+      },
+    );
   }
 }
 
@@ -162,6 +180,24 @@ class AppSecondaryButton extends StatelessWidget {
       return button;
     }
 
-    return SizedBox(width: double.infinity, child: button);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        assert(() {
+          if (!constraints.hasBoundedWidth) {
+            throw FlutterError(
+              'AppSecondaryButton com largura total precisa de largura finita. '
+              'Envolva com SizedBox/Expanded.',
+            );
+          }
+          return true;
+        }());
+
+        if (!constraints.hasBoundedWidth) {
+          return button;
+        }
+
+        return SizedBox(width: constraints.maxWidth, child: button);
+      },
+    );
   }
 }
