@@ -41,7 +41,7 @@ class EmptyStateWidget extends StatelessWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               description,
               textAlign: TextAlign.center,
@@ -49,7 +49,7 @@ class EmptyStateWidget extends StatelessWidget {
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xxl),
             AppPrimaryButton(
               label: actionLabel,
               onPressed: onAction,

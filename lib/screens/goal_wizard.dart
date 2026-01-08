@@ -89,7 +89,7 @@ class _GoalWizardState extends State<GoalWizard> {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe o título da meta.')),
+        const SnackBar(content: Text(AppStrings.goalTitleRequired)),
       );
       return;
     }
@@ -147,7 +147,7 @@ class _GoalWizardState extends State<GoalWizard> {
 
   String _formatDeadline(DateTime? deadline) {
     if (deadline == null) {
-      return 'Sem prazo definido';
+      return AppStrings.goalDeadlineUnset;
     }
     return '${deadline.day.toString().padLeft(2, '0')}/'
         '${deadline.month.toString().padLeft(2, '0')}/'
@@ -158,7 +158,7 @@ class _GoalWizardState extends State<GoalWizard> {
     final theme = Theme.of(context);
     return [
       Step(
-        title: const Text('Defina a Meta'),
+        title: const Text(AppStrings.goalDefineTitle),
         isActive: _currentStep >= 0,
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,13 +166,13 @@ class _GoalWizardState extends State<GoalWizard> {
             TextField(
               controller: _titleController,
               decoration: const InputDecoration(
-                labelText: 'Título',
+                labelText: AppStrings.goalTitleLabel,
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Prazo',
+              AppStrings.goalDeadlineLabel,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -189,7 +189,7 @@ class _GoalWizardState extends State<GoalWizard> {
                 TextButton.icon(
                   onPressed: _pickDeadline,
                   icon: const Icon(Icons.date_range),
-                  label: const Text('Escolher'),
+                  label: const Text(AppStrings.goalDeadlinePickAction),
                 ),
               ],
             ),
@@ -197,19 +197,19 @@ class _GoalWizardState extends State<GoalWizard> {
         ),
       ),
       Step(
-        title: const Text('O Propósito'),
+        title: const Text(AppStrings.goalPurposeTitle),
         isActive: _currentStep >= 1,
         content: TextField(
           controller: _reasonController,
           maxLines: 4,
           decoration: const InputDecoration(
-            labelText: 'Porquê',
+            labelText: AppStrings.goalPurposeLabel,
             border: OutlineInputBorder(),
           ),
         ),
       ),
       Step(
-        title: const Text('Milestones'),
+        title: const Text(AppStrings.goalMilestonesTitle),
         isActive: _currentStep >= 2,
         content: Column(
           children: [
@@ -217,7 +217,7 @@ class _GoalWizardState extends State<GoalWizard> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Nenhuma milestone adicionada.',
+                  AppStrings.goalMilestoneEmptyMessage,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.textMuted,
                   ),
@@ -253,7 +253,8 @@ class _GoalWizardState extends State<GoalWizard> {
                           child: TextField(
                             controller: milestone.controller,
                             decoration: InputDecoration(
-                              labelText: 'Milestone ${index + 1}',
+                              labelText:
+                                  '${AppStrings.goalMilestoneLabel} ${index + 1}',
                               border: const OutlineInputBorder(),
                             ),
                           ),
@@ -273,21 +274,21 @@ class _GoalWizardState extends State<GoalWizard> {
               child: TextButton.icon(
                 onPressed: _addMilestoneField,
                 icon: const Icon(Icons.add),
-                label: const Text('Adicionar milestone'),
+                label: const Text(AppStrings.goalMilestoneAddAction),
               ),
             ),
           ],
         ),
       ),
       Step(
-        title: const Text('Revisão'),
+        title: const Text(AppStrings.goalReviewTitle),
         isActive: _currentStep >= 3,
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               _titleController.text.trim().isEmpty
-                  ? 'Sem título'
+                  ? AppStrings.goalReviewNoTitle
                   : _titleController.text.trim(),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
@@ -295,14 +296,16 @@ class _GoalWizardState extends State<GoalWizard> {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Prazo: ${_formatDeadline(_targetDate)}',
+              AppStrings.goalReviewDeadlineLabel(
+                _formatDeadline(_targetDate),
+              ),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.textMuted,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Porquê',
+              AppStrings.goalPurposeTitle,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -310,7 +313,7 @@ class _GoalWizardState extends State<GoalWizard> {
             const SizedBox(height: AppSpacing.sm),
             Text(
               _reasonController.text.trim().isEmpty
-                  ? 'Sem descrição'
+                  ? AppStrings.goalReviewNoDescription
                   : _reasonController.text.trim(),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.textMuted,
@@ -318,7 +321,7 @@ class _GoalWizardState extends State<GoalWizard> {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Milestones',
+              AppStrings.goalMilestonesTitle,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -343,7 +346,7 @@ class _GoalWizardState extends State<GoalWizard> {
                 .where((text) => text.isNotEmpty)
                 .isEmpty)
               Text(
-                'Nenhuma milestone definida.',
+                AppStrings.goalReviewNoMilestones,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: AppColors.textMuted,
                 ),
@@ -385,7 +388,7 @@ class _GoalWizardState extends State<GoalWizard> {
                 return Row(
                   children: [
                     AppPrimaryButton(
-                      label: isLastStep ? AppStrings.save : AppStrings.advance,
+                      label: isLastStep ? AppStrings.save : AppStrings.next,
                       isFullWidth: false,
                       onPressed: _canContinue()
                           ? () {
