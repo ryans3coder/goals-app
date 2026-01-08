@@ -9,6 +9,7 @@ import '../models/milestone.dart';
 import '../models/routine.dart';
 import '../domain/habits/habit_form_options.dart';
 import '../services/data_provider.dart';
+import '../services/feedback_manager.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_strings.dart';
 import 'backup_screen.dart';
@@ -32,6 +33,13 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  late final FeedbackManager _feedbackManager;
+
+  @override
+  void initState() {
+    super.initState();
+    _feedbackManager = const FeedbackManager();
+  }
 
   static const _habitsTabIndex = 0;
   static const _routinesTabIndex = 1;
@@ -176,7 +184,7 @@ class _MainScreenState extends State<MainScreen> {
     ).whenComplete(titleController.dispose);
   }
 
-  void _showGoalWizard() {
+  void _showGoalWizard({Goal? goal}) {
     final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
@@ -184,7 +192,7 @@ class _MainScreenState extends State<MainScreen> {
       backgroundColor:
           theme.bottomSheetTheme.modalBackgroundColor ?? theme.cardColor,
       shape: theme.bottomSheetTheme.shape,
-      builder: (context) => const GoalWizard(),
+      builder: (context) => GoalWizard(goal: goal),
     );
   }
 
@@ -450,23 +458,36 @@ class _MainScreenState extends State<MainScreen> {
           separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
           itemBuilder: (context, index) {
             final goal = goals[index];
-            final totalMilestones = goal.milestones.length;
-            final completedMilestones = goal.milestones
+            final orderedMilestones = goal.milestones.toList()
+              ..sort((a, b) => a.order.compareTo(b.order));
+            final totalMilestones = orderedMilestones.length;
+            final completedMilestones = orderedMilestones
                 .where((milestone) => milestone.isCompleted)
                 .length;
             final progress = totalMilestones == 0
                 ? 0.0
                 : completedMilestones / totalMilestones;
+            final progressLabel = (progress * 100).round();
 
             return AppCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    goal.title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          goal.title,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined),
+                        onPressed: () => _showGoalWizard(goal: goal),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
@@ -479,14 +500,15 @@ class _MainScreenState extends State<MainScreen> {
                   AppProgressBar(value: progress),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    '$completedMilestones de $totalMilestones milestones concluídas',
+                    '$progressLabel% concluído · '
+                    '$completedMilestones de $totalMilestones milestones',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.textMuted,
                     ),
                   ),
-                  if (goal.milestones.isNotEmpty) ...[
+                  if (orderedMilestones.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.md),
-                    ...goal.milestones.asMap().entries.map(
+                    ...orderedMilestones.asMap().entries.map(
                       (entry) {
                         final milestone = entry.value;
                         return Row(
@@ -495,16 +517,28 @@ class _MainScreenState extends State<MainScreen> {
                               value: milestone.isCompleted,
                               onChanged: (value) async {
                                 final updatedMilestones = [
-                                  for (final item in goal.milestones)
+                                  for (final item in orderedMilestones)
                                     Milestone(
-                                      title: item.title,
+                                      id: item.id,
+                                      goalId: item.goalId,
+                                      text: item.text,
+                                      order: item.order,
                                       isCompleted: item.isCompleted,
+                                      completedAt: item.completedAt,
                                     ),
                                 ];
+                                final isCompleted = value ?? false;
                                 updatedMilestones[entry.key] = Milestone(
-                                  title: milestone.title,
-                                  isCompleted: value ?? false,
+                                  id: milestone.id,
+                                  goalId: milestone.goalId,
+                                  text: milestone.text,
+                                  order: milestone.order,
+                                  isCompleted: isCompleted,
+                                  completedAt:
+                                      isCompleted ? DateTime.now() : null,
                                 );
+                                final isGoalCompleted = updatedMilestones
+                                    .every((item) => item.isCompleted);
                                 await context
                                     .read<DataProvider>()
                                     .updateGoalMilestones(
@@ -513,20 +547,36 @@ class _MainScreenState extends State<MainScreen> {
                                         userId: goal.userId,
                                         title: goal.title,
                                         reason: goal.reason,
-                                        deadline: goal.deadline,
+                                        createdAt: goal.createdAt,
+                                        targetDate: goal.targetDate,
+                                        status: goal.status,
                                         milestones: updatedMilestones,
+                                        specific: goal.specific,
+                                        measurable: goal.measurable,
+                                        achievable: goal.achievable,
+                                        relevant: goal.relevant,
+                                        timeBound: goal.timeBound,
+                                        categoryId: goal.categoryId,
                                       ),
                                     );
+                                if (isGoalCompleted &&
+                                    goal.status != GoalStatus.completed) {
+                                  await _feedbackManager.triggerVictoryFeedback(
+                                    context
+                                        .read<DataProvider>()
+                                        .feedbackPreferences,
+                                  );
+                                }
                               },
                             ),
                             Expanded(
                               child: Text(
-                                milestone.title,
+                                milestone.text,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: milestone.isCompleted
                                       ? theme.colorScheme.onSurface
                                           .withValues(alpha: 0.6)
-                                      : theme.colorScheme.onSurface,
+                                  : theme.colorScheme.onSurface,
                                   decoration: milestone.isCompleted
                                       ? TextDecoration.lineThrough
                                       : TextDecoration.none,

@@ -1,5 +1,6 @@
 class AppStrings {
   static const String addGoalTitle = 'Adicionar Meta';
+  static const String editGoalTitle = 'Editar Meta';
   static const String advance = 'Avançar';
   static const String back = 'Voltar';
   static const String save = 'Salvar';
