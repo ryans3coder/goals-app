@@ -248,7 +248,12 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         return ListView.separated(
-          padding: const EdgeInsets.all(AppSpacing.page),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            0,
+            AppSpacing.page,
+            AppSpacing.page,
+          ),
           itemCount: habits.length,
           separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
           itemBuilder: (context, index) {
@@ -391,7 +396,12 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         return ListView.separated(
-          padding: const EdgeInsets.all(AppSpacing.page),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            0,
+            AppSpacing.page,
+            AppSpacing.page,
+          ),
           itemCount: routines.length,
           separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
           itemBuilder: (context, index) {
@@ -453,7 +463,12 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         return ListView.separated(
-          padding: const EdgeInsets.all(AppSpacing.page),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            0,
+            AppSpacing.page,
+            AppSpacing.page,
+          ),
           itemCount: goals.length,
           separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
           itemBuilder: (context, index) {
@@ -516,7 +531,7 @@ class _MainScreenState extends State<MainScreen> {
                         final milestone = entry.value;
                         return Row(
                           children: [
-                            Checkbox(
+                            _MilestoneCheckbox(
                               value: milestone.isCompleted,
                               onChanged: (value) async {
                                 final updatedMilestones = [
@@ -746,7 +761,12 @@ class _MainScreenState extends State<MainScreen> {
     );
 
     return ListView.separated(
-      padding: const EdgeInsets.all(AppSpacing.page),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        0,
+        AppSpacing.page,
+        AppSpacing.page,
+      ),
       itemCount: sections.length,
       separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
       itemBuilder: (context, index) => sections[index],
@@ -787,15 +807,29 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          activeTab.label,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                AppSpacing.page,
+                AppSpacing.page,
+                AppSpacing.lg,
               ),
+              child: Text(
+                activeTab.label,
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textTitle,
+                    ),
+              ),
+            ),
+            Expanded(child: body),
+          ],
         ),
       ),
-      body: body,
       floatingActionButton: showFab
           ? FloatingActionButton.large(
               onPressed: () {
@@ -855,3 +889,53 @@ class _TabData {
 }
 
 enum _CreationType { habit, routine }
+
+class _MilestoneCheckbox extends StatelessWidget {
+  const _MilestoneCheckbox({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool?> onChanged;
+
+  static const double _hitTarget = 48;
+  static const double _circleSize = 32;
+  static const double _borderWidth = 3;
+  static const Color _uncheckedBorder = Color(0xFFE6E9F2);
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkResponse(
+        onTap: () => onChanged(!value),
+        radius: _hitTarget / 2,
+        containedInkWell: true,
+        child: SizedBox(
+          width: _hitTarget,
+          height: _hitTarget,
+          child: Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: _circleSize,
+              height: _circleSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: value ? AppColors.secondary : Colors.transparent,
+                border: Border.all(
+                  color: value ? AppColors.secondary : _uncheckedBorder,
+                  width: _borderWidth,
+                ),
+              ),
+              child: value
+                  ? const Icon(
+                      Icons.check,
+                      size: 20,
+                      color: AppColors.primary,
+                    )
+                  : null,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
