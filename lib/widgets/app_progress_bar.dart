@@ -11,7 +11,7 @@ class AppProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadii.sm),
+      borderRadius: BorderRadius.circular(AppRadii.input),
       child: LinearProgressIndicator(
         value: value,
         minHeight: AppSizes.progressHeight,

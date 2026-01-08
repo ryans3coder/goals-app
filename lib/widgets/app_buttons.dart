@@ -30,7 +30,7 @@ class AppPrimaryButton extends StatelessWidget {
           foregroundColor: theme.colorScheme.onPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.md),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
           textStyle: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
@@ -118,7 +118,7 @@ class AppSecondaryButton extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.md),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         ),

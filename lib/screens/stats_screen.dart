@@ -134,7 +134,7 @@ class _StatsContent extends StatelessWidget {
                       Text(
                         AppStrings.statsLevelLabel,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.textMuted,
+                          color: AppColors.textBody,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -152,7 +152,7 @@ class _StatsContent extends StatelessWidget {
                       Text(
                         AppStrings.statsTotalXpLabel,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.textMuted,
+                          color: AppColors.textBody,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -172,7 +172,7 @@ class _StatsContent extends StatelessWidget {
               Text(
                 '${levelProgress.xpIntoLevel}/${levelProgress.xpToNextLevel} ${AppStrings.statsXpUnit} · ${AppStrings.statsLevelNextLabel} ${levelProgress.nextLevel}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.textMuted,
+                  color: AppColors.textBody,
                 ),
               ),
             ],
@@ -193,7 +193,7 @@ class _StatsContent extends StatelessWidget {
               Text(
                 AppStrings.statsStreakRule,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.textMuted,
+                  color: AppColors.textBody,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -272,7 +272,7 @@ class _StatsContent extends StatelessWidget {
                       Text(
                         '${entry.xp} ${AppStrings.statsXpUnit}',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textMuted,
+                          color: AppColors.textBody,
                         ),
                       ),
                     ],
@@ -301,7 +301,7 @@ class _MetricPill extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: theme.colorScheme.primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(AppRadii.md),
+          borderRadius: BorderRadius.circular(AppRadii.input),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,7 +309,7 @@ class _MetricPill extends StatelessWidget {
             Text(
               label,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.textMuted,
+                color: AppColors.textBody,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -340,7 +340,7 @@ class _SuccessRateCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colorScheme.secondary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppRadii.md),
+        borderRadius: BorderRadius.circular(AppRadii.input),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,7 +348,7 @@ class _SuccessRateCard extends StatelessWidget {
           Text(
             label,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: AppColors.textMuted,
+              color: AppColors.textBody,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -362,7 +362,7 @@ class _SuccessRateCard extends StatelessWidget {
           Text(
             '${summary.completed}/${summary.started} ${AppStrings.statsSuccessUnit}',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: AppColors.textMuted,
+              color: AppColors.textBody,
             ),
           ),
         ],

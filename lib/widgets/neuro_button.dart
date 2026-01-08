@@ -29,7 +29,7 @@ class NeuroButton extends StatelessWidget {
           foregroundColor: theme.colorScheme.onPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.md),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
           textStyle: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,

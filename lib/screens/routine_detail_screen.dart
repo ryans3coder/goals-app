@@ -360,7 +360,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                           widget.routine.title,
                           style: theme.textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textMuted,
+                            color: AppColors.textBody,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -457,7 +457,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                                           ),
                                           style: theme.textTheme.bodyMedium
                                               ?.copyWith(
-                                            color: AppColors.textMuted,
+                                            color: AppColors.textBody,
                                           ),
                                         ),
                                       ],
@@ -487,7 +487,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                           Text(
                             AppStrings.routineStepEmptyMessage,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textMuted,
+                              color: AppColors.textBody,
                             ),
                           ),
                         ],

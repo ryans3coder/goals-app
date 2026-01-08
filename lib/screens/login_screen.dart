@@ -71,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   'Organize hábitos, rotinas e metas com ciência comportamental.',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textMuted,
+                    color: AppColors.textBody,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),

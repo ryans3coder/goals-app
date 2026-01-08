@@ -219,7 +219,7 @@ class _GoalWizardState extends State<GoalWizard> {
                 child: Text(
                   AppStrings.goalMilestoneEmptyMessage,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textMuted,
+                    color: AppColors.textBody,
                   ),
                 ),
               ),
@@ -300,7 +300,7 @@ class _GoalWizardState extends State<GoalWizard> {
                 _formatDeadline(_targetDate),
               ),
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.textMuted,
+                color: AppColors.textBody,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -316,7 +316,7 @@ class _GoalWizardState extends State<GoalWizard> {
                   ? AppStrings.goalReviewNoDescription
                   : _reasonController.text.trim(),
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.textMuted,
+                color: AppColors.textBody,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -336,7 +336,7 @@ class _GoalWizardState extends State<GoalWizard> {
                     child: Text(
                       '• $text',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textBody,
                       ),
                     ),
                   ),
@@ -348,7 +348,7 @@ class _GoalWizardState extends State<GoalWizard> {
               Text(
                 AppStrings.goalReviewNoMilestones,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textMuted,
+                  color: AppColors.textBody,
                 ),
               ),
           ],

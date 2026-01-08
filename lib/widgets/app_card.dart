@@ -6,7 +6,7 @@ class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(AppSpacing.xl),
+    this.padding = const EdgeInsets.all(AppSpacing.card),
     this.onTap,
   });
 
@@ -17,7 +17,7 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final borderRadius = BorderRadius.circular(AppRadii.md);
+    final borderRadius = BorderRadius.circular(AppRadii.card);
 
     return Material(
       color: Colors.transparent,
@@ -29,13 +29,7 @@ class AppCard extends StatelessWidget {
             color: theme.colorScheme.surface,
             borderRadius: borderRadius,
             border: Border.all(color: theme.colorScheme.outline),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
-                blurRadius: 18,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            boxShadow: [AppShadows.cardShadow],
           ),
           child: Padding(
             padding: padding,

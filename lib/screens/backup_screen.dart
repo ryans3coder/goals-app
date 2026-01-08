@@ -223,7 +223,7 @@ class _BackupScreenState extends State<BackupScreen> {
                 Text(
                   AppStrings.backupLoggedOut,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textMuted,
+                    color: AppColors.textBody,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -249,7 +249,7 @@ class _BackupScreenState extends State<BackupScreen> {
                 Text(
                   user.email ?? AppStrings.backupNoEmail,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textMuted,
+                    color: AppColors.textBody,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -282,7 +282,7 @@ class _BackupScreenState extends State<BackupScreen> {
           Text(
             _formatTimestamp(_controller.lastBackupAt),
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textMuted,
+              color: AppColors.textBody,
             ),
           ),
         ],
@@ -310,7 +310,7 @@ class _BackupScreenState extends State<BackupScreen> {
           Text(
             AppStrings.backupActionsHint,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textMuted,
+              color: AppColors.textBody,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
