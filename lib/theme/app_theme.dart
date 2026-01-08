@@ -7,11 +7,14 @@ class AppColors {
   static const Color backgroundDark = Color(0xFF0B1020);
   static const Color surfaceDark = Color(0xFF121A33);
   static const Color primary = Color(0xFF6D5EF6);
+  static const Color accent = AppColors.primary;
   static const Color secondary = Color(0xFFB8FF3C);
   static const Color info = Color(0xFF4DB5FF);
+  static const Color danger = AppColors.primary;
   static const Color textTitle = Color(0xFF1A1C29);
   static const Color textBody = Color(0xFF525766);
   static const Color textDark = Color(0xFFEAF0FF);
+  static const Color outline = Color(0x1F525766);
 }
 
 class AppDarkColors {
