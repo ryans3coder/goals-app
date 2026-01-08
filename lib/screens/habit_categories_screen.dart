@@ -28,6 +28,7 @@ class _HabitCategoriesScreenState extends State<HabitCategoriesScreen> {
     String selectedColorToken = category?.colorToken.isNotEmpty == true
         ? category!.colorToken
         : HabitCategoryFormOptions.defaultColorToken;
+    String? nameError;
     String? emojiError;
 
     final result = await showModalBottomSheet<bool>(
@@ -62,9 +63,18 @@ class _HabitCategoriesScreenState extends State<HabitCategoriesScreen> {
                   const SizedBox(height: AppSpacing.lg),
                   TextFormField(
                     controller: nameController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: AppStrings.habitCategoryNameLabel,
+                      errorText: nameError,
                     ),
+                    onChanged: (_) {
+                      if (nameError == null) {
+                        return;
+                      }
+                      setModalState(() {
+                        nameError = null;
+                      });
+                    },
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
@@ -142,6 +152,9 @@ class _HabitCategoriesScreenState extends State<HabitCategoriesScreen> {
                     onPressed: () {
                       final name = nameController.text.trim();
                       if (name.isEmpty) {
+                        setModalState(() {
+                          nameError = AppStrings.nameRequired;
+                        });
                         return;
                       }
                       if (selectedEmoji.isEmpty) {

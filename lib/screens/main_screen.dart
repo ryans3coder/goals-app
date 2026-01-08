@@ -339,7 +339,7 @@ class _MainScreenState extends State<MainScreen> {
                                     size: AppSizes.iconSmall,
                                   ),
                                   const SizedBox(width: AppSpacing.sm),
-                                  Text(AppStrings.done),
+                                  Text(AppStrings.completed),
                                 ],
                               ),
                             )
@@ -353,7 +353,7 @@ class _MainScreenState extends State<MainScreen> {
                                       isCompletedToday: true,
                                     );
                               },
-                              label: AppStrings.check,
+                              label: AppStrings.complete,
                               isFullWidth: false,
                             ),
                     ),
@@ -381,8 +381,8 @@ class _MainScreenState extends State<MainScreen> {
         if (routines.isEmpty) {
           return _buildEmptyState(
             icon: Icons.nights_stay_outlined,
-            title: 'Sem rotinas por enquanto.',
-            message: 'Crie uma rotina para manter o foco no dia.',
+            title: AppStrings.routineEmptyTitle,
+            message: AppStrings.routineEmptyMessage,
             actionLabel: AppStrings.createRoutine,
             onAction: () => _showCreateModal(
               initialType: _CreationType.routine,
@@ -445,8 +445,8 @@ class _MainScreenState extends State<MainScreen> {
         if (goals.isEmpty) {
           return _buildEmptyState(
             icon: Icons.emoji_events_outlined,
-            title: 'Sem metas por enquanto.',
-            message: 'Defina uma meta e acompanhe seu progresso.',
+            title: AppStrings.goalEmptyTitle,
+            message: AppStrings.goalEmptyMessage,
             actionLabel: AppStrings.createGoal,
             onAction: _showGoalWizard,
           );
@@ -491,7 +491,7 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    goal.reason.isEmpty ? 'Sem propósito' : goal.reason,
+                    goal.reason.isEmpty ? AppStrings.goalNoReason : goal.reason,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.textMuted,
                     ),
@@ -500,8 +500,11 @@ class _MainScreenState extends State<MainScreen> {
                   AppProgressBar(value: progress),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    '$progressLabel% concluído · '
-                    '$completedMilestones de $totalMilestones milestones',
+                    AppStrings.goalProgressSummary(
+                      percent: progressLabel,
+                      completed: completedMilestones,
+                      total: totalMilestones,
+                    ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.textMuted,
                     ),
@@ -775,7 +778,7 @@ class _MainScreenState extends State<MainScreen> {
         body = _buildEmptyState(
           icon: activeTab.icon,
           title: activeTab.label,
-          message: 'Em breve você verá seus dados aqui.',
+          message: AppStrings.placeholderEmptyMessage,
           actionLabel: AppStrings.createHabit,
           onAction: () => _showCreateModal(
             initialType: _CreationType.habit,

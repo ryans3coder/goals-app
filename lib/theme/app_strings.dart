@@ -1,15 +1,14 @@
 class AppStrings {
   static const String addGoalTitle = 'Adicionar Meta';
   static const String editGoalTitle = 'Editar Meta';
-  static const String advance = 'Avançar';
   static const String back = 'Voltar';
   static const String save = 'Salvar';
   static const String skip = 'Pular';
   static const String next = 'Próximo';
   static const String signInGoogle = 'Entrar com Google';
   static const String signOut = 'Sair';
-  static const String check = 'Check';
-  static const String done = 'Feito';
+  static const String complete = 'Concluir';
+  static const String completed = 'Concluído';
   static const String createHabit = 'Criar hábito';
   static const String createRoutine = 'Criar rotina';
   static const String createGoal = 'Criar meta';
@@ -61,6 +60,9 @@ class AppStrings {
   static const String habitCreateAction = 'Novo hábito';
   static const String habitCreateHint =
       'Adicione os detalhes para criar seu hábito.';
+  static const String routineEmptyTitle = 'Sem rotinas por enquanto.';
+  static const String routineEmptyMessage =
+      'Crie uma rotina para manter o foco no dia.';
   static const String routineRunTitle = 'Modo de execução';
   static const String routineRunStart = 'Iniciar';
   static const String routineRunPause = 'Pausar';
@@ -68,6 +70,7 @@ class AppStrings {
   static const String routineRunNoStepsTitle = 'Sem passos na rotina';
   static const String routineRunNoStepsMessage =
       'Adicione passos antes de iniciar a execução.';
+  static const String routineRunStepPrefix = 'Passo';
   static const String routineRunSkipTitle = 'Pular este passo?';
   static const String routineRunSkipMessage =
       'Você pode concluir depois. Deseja pular agora?';
@@ -77,6 +80,24 @@ class AppStrings {
       'Ao sair do app, a rotina é pausada automaticamente.';
   static const String routineRunStartAction = 'Iniciar rotina';
   static const String routineRunHabitRemoved = 'Hábito removido';
+  static const String routineStepsTitle = 'Passos da rotina';
+  static const String routineStepAddTitle = 'Adicionar passo';
+  static const String routineStepAddAction = 'Adicionar passo';
+  static const String routineStepAddHint =
+      'Crie um hábito antes de adicionar um passo.';
+  static const String routineStepSelectHabitLabel = 'Selecione o hábito';
+  static const String routineStepMinutesLabel = 'Minutos';
+  static const String routineStepSecondsLabel = 'Segundos';
+  static const String routineStepSelectHabitError =
+      'Selecione um hábito para continuar.';
+  static const String routineStepDurationError =
+      'Informe uma duração válida para continuar.';
+  static const String routineStepDuplicateHabitError =
+      'Este hábito já está na rotina.';
+  static const String routineStepAddError =
+      'Não foi possível adicionar o passo.';
+  static const String routineStepEditDurationTitle = 'Editar duração';
+  static const String routineStepEmptyMessage = 'Nenhum passo adicionado.';
   static const String routineStepRemoveTitle = 'Remover passo';
   static const String routineStepRemoveMessage =
       'Deseja remover este passo da rotina?';
@@ -84,6 +105,29 @@ class AppStrings {
   static const String routineStepDurationUpdateError =
       'Não foi possível atualizar a duração.';
   static const String routineStepDurationUnset = 'Definir duração';
+  static const String goalEmptyTitle = 'Sem metas por enquanto.';
+  static const String goalEmptyMessage =
+      'Defina uma meta e acompanhe seu progresso.';
+  static const String goalNoReason = 'Sem propósito';
+  static const String goalDefineTitle = 'Defina a meta';
+  static const String goalTitleLabel = 'Título';
+  static const String goalTitleRequired =
+      'Informe o título da meta para continuar.';
+  static const String goalDeadlineLabel = 'Prazo';
+  static const String goalDeadlineUnset = 'Sem prazo definido';
+  static const String goalDeadlinePickAction = 'Escolher';
+  static const String goalPurposeTitle = 'Propósito';
+  static const String goalPurposeLabel = 'Por quê';
+  static const String goalMilestonesTitle = 'Etapas';
+  static const String goalMilestoneEmptyMessage = 'Nenhuma etapa adicionada.';
+  static const String goalMilestoneLabel = 'Etapa';
+  static const String goalMilestoneAddAction = 'Adicionar etapa';
+  static const String goalReviewTitle = 'Revisão';
+  static const String goalReviewNoTitle = 'Sem título';
+  static const String goalReviewNoDescription = 'Sem descrição';
+  static const String goalReviewNoMilestones =
+      'Nenhuma etapa definida.';
+  static const String goalReviewDeadlinePrefix = 'Prazo';
   static const String statsTitle = 'Estatísticas';
   static const String statsStreakTitle = 'Streak diário';
   static const String statsStreakLabel = 'Dias seguidos';
@@ -142,4 +186,29 @@ class AppStrings {
   static const String backupSignInError =
       'Não foi possível autenticar agora.';
   static const String retry = 'Tentar novamente';
+  static const String placeholderEmptyMessage =
+      'Em breve você verá seus dados aqui.';
+
+  static String routineStepCountLabel(int count) {
+    return 'Passos configurados: $count';
+  }
+
+  static String routineRunStepIndicator({
+    required int current,
+    required int total,
+  }) {
+    return '$routineRunStepPrefix $current de $total';
+  }
+
+  static String goalProgressSummary({
+    required int percent,
+    required int completed,
+    required int total,
+  }) {
+    return '$percent% concluído · $completed de $total etapas';
+  }
+
+  static String goalReviewDeadlineLabel(String deadline) {
+    return '$goalReviewDeadlinePrefix: $deadline';
+  }
 }

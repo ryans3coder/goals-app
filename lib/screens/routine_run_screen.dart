@@ -435,9 +435,10 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                hasSteps
-                    ? 'Passo ${safeIndex + 1} de ${steps.length}'
-                    : 'Passo 0 de 0',
+                AppStrings.routineRunStepIndicator(
+                  current: hasSteps ? safeIndex + 1 : 0,
+                  total: steps.length,
+                ),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),

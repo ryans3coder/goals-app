@@ -47,7 +47,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
     required List<RoutineStep> existingSteps,
   }) async {
     if (habits.isEmpty) {
-      _showSnack('Crie um hábito antes de adicionar um passo.');
+      _showSnack(AppStrings.routineStepAddHint);
       return;
     }
 
@@ -79,7 +79,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Adicionar passo',
+                        AppStrings.routineStepAddTitle,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
@@ -102,7 +102,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                           setModalState(() => selectedHabitId = value);
                         },
                         decoration: const InputDecoration(
-                          labelText: 'Selecione o hábito',
+                          labelText: AppStrings.routineStepSelectHabitLabel,
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -114,7 +114,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                               controller: minutesController,
                               keyboardType: TextInputType.number,
                               decoration: const InputDecoration(
-                                labelText: 'Minutos',
+                                labelText: AppStrings.routineStepMinutesLabel,
                                 border: OutlineInputBorder(),
                               ),
                             ),
@@ -125,7 +125,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                               controller: secondsController,
                               keyboardType: TextInputType.number,
                               decoration: const InputDecoration(
-                                labelText: 'Segundos',
+                                labelText: AppStrings.routineStepSecondsLabel,
                                 border: OutlineInputBorder(),
                               ),
                             ),
@@ -144,17 +144,17 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
 
                           if (selectedHabitId == null ||
                               selectedHabitId!.isEmpty) {
-                            _showSnack('Selecione um hábito.');
+                            _showSnack(AppStrings.routineStepSelectHabitError);
                             return;
                           }
                           if (totalSeconds <= 0) {
-                            _showSnack('Informe uma duração válida.');
+                            _showSnack(AppStrings.routineStepDurationError);
                             return;
                           }
                           if (existingSteps.any(
                             (step) => step.habitId == selectedHabitId,
                           )) {
-                            _showSnack('Este hábito já está na rotina.');
+                            _showSnack(AppStrings.routineStepDuplicateHabitError);
                             return;
                           }
 
@@ -167,7 +167,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                               );
 
                           if (!added) {
-                            _showSnack('Não foi possível adicionar o passo.');
+                            _showSnack(AppStrings.routineStepAddError);
                             return;
                           }
 
@@ -218,7 +218,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Editar duração',
+                    AppStrings.routineStepEditDurationTitle,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -231,7 +231,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                           controller: minutesController,
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
-                            labelText: 'Minutos',
+                            labelText: AppStrings.routineStepMinutesLabel,
                             border: OutlineInputBorder(),
                           ),
                         ),
@@ -242,7 +242,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                           controller: secondsController,
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
-                            labelText: 'Segundos',
+                            labelText: AppStrings.routineStepSecondsLabel,
                             border: OutlineInputBorder(),
                           ),
                         ),
@@ -259,7 +259,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                           int.tryParse(secondsController.text.trim()) ?? 0;
                       final totalSeconds = (minutes * 60) + seconds;
                       if (totalSeconds <= 0) {
-                        _showSnack('Informe uma duração válida.');
+                        _showSnack(AppStrings.routineStepDurationError);
                         return;
                       }
 
@@ -370,7 +370,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    'Passos da rotina',
+                    AppStrings.routineStepsTitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.onSurface,
@@ -467,7 +467,8 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                                     onPressed: () =>
                                         _showEditDurationSheet(step),
                                     icon: const Icon(Icons.edit_outlined),
-                                    tooltip: 'Editar duração',
+                                    tooltip:
+                                        AppStrings.routineStepEditDurationTitle,
                                   ),
                                   IconButton(
                                     onPressed: () => _confirmRemoveStep(step),
@@ -484,7 +485,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
                         padding: EdgeInsets.zero,
                         children: [
                           Text(
-                            'Nenhum passo adicionado.',
+                            AppStrings.routineStepEmptyMessage,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: AppColors.textMuted,
                             ),
@@ -510,7 +511,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AppSecondaryButton(
-                label: 'Adicionar passo',
+                label: AppStrings.routineStepAddAction,
                 onPressed: () => _showAddStepSheet(
                   habits: habits,
                   existingSteps: steps,
@@ -524,7 +525,7 @@ class _RoutineDetailScreenState extends State<RoutineDetailScreen> {
               const SizedBox(height: AppSpacing.md),
               Text(
                 hasSteps
-                    ? 'Passos configurados: ${steps.length}'
+                    ? AppStrings.routineStepCountLabel(steps.length)
                     : AppStrings.routineRunNoStepsTitle,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
