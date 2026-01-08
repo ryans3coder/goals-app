@@ -430,7 +430,7 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
                 widget.routine.title,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted,
+                  color: AppColors.textBody,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -481,7 +481,7 @@ class _RoutineRunScreenState extends State<RoutineRunScreen>
               Text(
                 AppStrings.routineRunBackgroundPause,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.textMuted,
+                  color: AppColors.textBody,
                 ),
               ),
               const Spacer(),

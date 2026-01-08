@@ -125,7 +125,7 @@ class _MainScreenState extends State<MainScreen> {
                     Text(
                       AppStrings.habitCreateHint,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textBody,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -299,7 +299,7 @@ class _MainScreenState extends State<MainScreen> {
                                 Text(
                                   categoryLabel,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textMuted,
+                                    color: AppColors.textBody,
                                   ),
                                 ),
                               ],
@@ -326,11 +326,11 @@ class _MainScreenState extends State<MainScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color:
-                                    theme.colorScheme.tertiary.withValues(
+                                    theme.colorScheme.secondary.withValues(
                                       alpha: 0.18,
                                     ),
                                 borderRadius:
-                                    BorderRadius.circular(AppRadii.sm),
+                                    BorderRadius.circular(AppRadii.input),
                               ),
                               child: Row(
                                 children: [
@@ -418,7 +418,7 @@ class _MainScreenState extends State<MainScreen> {
                     Text(
                       routine.triggerTime,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textBody,
                       ),
                     ),
                   ],
@@ -493,7 +493,7 @@ class _MainScreenState extends State<MainScreen> {
                   Text(
                     goal.reason.isEmpty ? AppStrings.goalNoReason : goal.reason,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textMuted,
+                      color: AppColors.textBody,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -506,7 +506,7 @@ class _MainScreenState extends State<MainScreen> {
                       total: totalMilestones,
                     ),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textMuted,
+                      color: AppColors.textBody,
                     ),
                   ),
                   if (orderedMilestones.isNotEmpty) ...[
@@ -620,7 +620,7 @@ class _MainScreenState extends State<MainScreen> {
           subtitle: Text(
             AppStrings.habitCategoryManageHint,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textMuted,
+              color: AppColors.textBody,
             ),
           ),
           trailing: const Icon(Icons.chevron_right),
@@ -648,7 +648,7 @@ class _MainScreenState extends State<MainScreen> {
           subtitle: Text(
             AppStrings.backupHint,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textMuted,
+              color: AppColors.textBody,
             ),
           ),
           trailing: const Icon(Icons.chevron_right),
@@ -676,7 +676,7 @@ class _MainScreenState extends State<MainScreen> {
           subtitle: Text(
             AppStrings.statsShortcutHint,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textMuted,
+              color: AppColors.textBody,
             ),
           ),
           trailing: const Icon(Icons.chevron_right),
@@ -706,7 +706,7 @@ class _MainScreenState extends State<MainScreen> {
             Text(
               AppStrings.feedbackPreferencesHint,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.textMuted,
+                color: AppColors.textBody,
               ),
             ),
             const SizedBox(height: AppSpacing.md),

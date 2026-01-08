@@ -37,7 +37,7 @@ class AppSegmentedControl<T> extends StatelessWidget {
             color: isSelected
                 ? theme.colorScheme.primary.withValues(alpha: 0.14)
                 : theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(AppRadii.lg),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
             border: Border.all(
               color: isSelected
                   ? theme.colorScheme.primary
@@ -45,7 +45,7 @@ class AppSegmentedControl<T> extends StatelessWidget {
             ),
           ),
           child: InkWell(
-            borderRadius: BorderRadius.circular(AppRadii.lg),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
             onTap: () => onChanged(option.value),
             child: Padding(
               padding: const EdgeInsets.symmetric(
@@ -68,7 +68,7 @@ class AppSegmentedControl<T> extends StatelessWidget {
                   Text(
                     option.label,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: isSelected
                           ? theme.colorScheme.primary
                           : theme.colorScheme.onSurface,

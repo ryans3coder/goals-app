@@ -103,7 +103,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               .textTheme
                               .bodyMedium
                               ?.copyWith(
-                            color: AppColors.textMuted,
+                            color: AppColors.textBody,
                             height: 1.4,
                           ),
                         ),
@@ -129,7 +129,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       color: _currentIndex == index
                           ? AppColors.primary
                           : AppColors.outline,
-                      borderRadius: BorderRadius.circular(AppRadii.sm),
+                      borderRadius: BorderRadius.circular(AppRadii.input),
                     ),
                   ),
                 ),
