@@ -9,7 +9,9 @@ import '../theme/app_strings.dart';
 import '../widgets/app_buttons.dart';
 
 class GoalWizard extends StatefulWidget {
-  const GoalWizard({super.key});
+  const GoalWizard({super.key, this.goal});
+
+  final Goal? goal;
 
   @override
   State<GoalWizard> createState() => _GoalWizardState();
@@ -18,30 +20,52 @@ class GoalWizard extends StatefulWidget {
 class _GoalWizardState extends State<GoalWizard> {
   final _titleController = TextEditingController();
   final _reasonController = TextEditingController();
-  final List<TextEditingController> _milestoneControllers = [];
+  final List<_MilestoneDraft> _milestones = [];
   int _currentStep = 0;
-  DateTime? _deadline;
+  DateTime? _targetDate;
+  late final DateTime _createdAt;
+
+  @override
+  void initState() {
+    super.initState();
+    final goal = widget.goal;
+    if (goal != null) {
+      _titleController.text = goal.title;
+      _reasonController.text = goal.reason;
+      _targetDate = goal.targetDate;
+      _createdAt = goal.createdAt;
+      final sortedMilestones = goal.milestones.toList()
+        ..sort((a, b) => a.order.compareTo(b.order));
+      for (final milestone in sortedMilestones) {
+        _milestones.add(
+          _MilestoneDraft.fromMilestone(milestone),
+        );
+      }
+    } else {
+      _createdAt = DateTime.now();
+    }
+  }
 
   @override
   void dispose() {
     _titleController.dispose();
     _reasonController.dispose();
-    for (final controller in _milestoneControllers) {
-      controller.dispose();
+    for (final milestone in _milestones) {
+      milestone.dispose();
     }
     super.dispose();
   }
 
   void _addMilestoneField() {
     setState(() {
-      _milestoneControllers.add(TextEditingController());
+      _milestones.add(_MilestoneDraft.create());
     });
   }
 
   void _removeMilestoneField(int index) {
     setState(() {
-      _milestoneControllers[index].dispose();
-      _milestoneControllers.removeAt(index);
+      _milestones[index].dispose();
+      _milestones.removeAt(index);
     });
   }
 
@@ -49,14 +73,14 @@ class _GoalWizardState extends State<GoalWizard> {
     final now = DateTime.now();
     final selected = await showDatePicker(
       context: context,
-      initialDate: _deadline ?? now,
+      initialDate: _targetDate ?? now,
       firstDate: now.subtract(const Duration(days: 1)),
       lastDate: now.add(const Duration(days: 3650)),
     );
 
     if (selected != null) {
       setState(() {
-        _deadline = selected;
+        _targetDate = selected;
       });
     }
   }
@@ -70,22 +94,41 @@ class _GoalWizardState extends State<GoalWizard> {
       return;
     }
 
-    final milestones = _milestoneControllers
-        .map((controller) => controller.text.trim())
-        .where((title) => title.isNotEmpty)
-        .map((title) => Milestone(title: title, isCompleted: false))
-        .toList();
+    final milestones = <Milestone>[];
+    var order = 0;
+    for (final draft in _milestones) {
+      final text = draft.controller.text.trim();
+      if (text.isEmpty) {
+        continue;
+      }
+      milestones.add(
+        Milestone(
+          id: draft.id,
+          goalId: widget.goal?.id ?? '',
+          text: text,
+          order: order,
+          isCompleted: draft.isCompleted,
+          completedAt: draft.completedAt,
+        ),
+      );
+      order += 1;
+    }
 
     final goal = Goal(
-      id: '',
-      userId: '',
+      id: widget.goal?.id ?? '',
+      userId: widget.goal?.userId ?? '',
       title: title,
       reason: _reasonController.text.trim(),
-      deadline: _deadline,
+      createdAt: _createdAt,
+      targetDate: _targetDate,
+      status: widget.goal?.status ?? GoalStatus.active,
       milestones: milestones,
       specific: title,
+      measurable: widget.goal?.measurable ?? '',
+      achievable: widget.goal?.achievable ?? '',
       relevant: _reasonController.text.trim(),
-      timeBound: _deadline,
+      timeBound: _targetDate,
+      categoryId: widget.goal?.categoryId ?? '',
     );
 
     await context.read<DataProvider>().addGoal(goal);
@@ -139,7 +182,7 @@ class _GoalWizardState extends State<GoalWizard> {
               children: [
                 Expanded(
                   child: Text(
-                    _formatDeadline(_deadline),
+                    _formatDeadline(_targetDate),
                     style: theme.textTheme.bodyMedium,
                   ),
                 ),
@@ -170,7 +213,7 @@ class _GoalWizardState extends State<GoalWizard> {
         isActive: _currentStep >= 2,
         content: Column(
           children: [
-            if (_milestoneControllers.isEmpty)
+            if (_milestones.isEmpty)
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -180,27 +223,50 @@ class _GoalWizardState extends State<GoalWizard> {
                   ),
                 ),
               ),
-            for (int index = 0; index < _milestoneControllers.length; index++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _milestoneControllers[index],
-                        decoration: InputDecoration(
-                          labelText: 'Milestone ${index + 1}',
-                          border: const OutlineInputBorder(),
+            if (_milestones.isNotEmpty)
+              ReorderableListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _milestones.length,
+                onReorder: (oldIndex, newIndex) {
+                  setState(() {
+                    if (newIndex > oldIndex) {
+                      newIndex -= 1;
+                    }
+                    final milestone = _milestones.removeAt(oldIndex);
+                    _milestones.insert(newIndex, milestone);
+                  });
+                },
+                itemBuilder: (context, index) {
+                  final milestone = _milestones[index];
+                  return Padding(
+                    key: ValueKey(milestone.id),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: Row(
+                      children: [
+                        ReorderableDragStartListener(
+                          index: index,
+                          child: const Icon(Icons.drag_indicator),
                         ),
-                      ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: TextField(
+                            controller: milestone.controller,
+                            decoration: InputDecoration(
+                              labelText: 'Milestone ${index + 1}',
+                              border: const OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        IconButton(
+                          onPressed: () => _removeMilestoneField(index),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    IconButton(
-                      onPressed: () => _removeMilestoneField(index),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
             Align(
               alignment: Alignment.centerLeft,
@@ -229,7 +295,7 @@ class _GoalWizardState extends State<GoalWizard> {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Prazo: ${_formatDeadline(_deadline)}',
+              'Prazo: ${_formatDeadline(_targetDate)}',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.textMuted,
               ),
@@ -258,23 +324,23 @@ class _GoalWizardState extends State<GoalWizard> {
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            ..._milestoneControllers
-                .map((controller) => controller.text.trim())
-                .where((title) => title.isNotEmpty)
+            ..._milestones
+                .map((milestone) => milestone.controller.text.trim())
+                .where((text) => text.isNotEmpty)
                 .map(
-                  (title) => Padding(
+                  (text) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                     child: Text(
-                      '• $title',
+                      '• $text',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: AppColors.textMuted,
                       ),
                     ),
                   ),
                 ),
-            if (_milestoneControllers
-                .map((controller) => controller.text.trim())
-                .where((title) => title.isNotEmpty)
+            if (_milestones
+                .map((milestone) => milestone.controller.text.trim())
+                .where((text) => text.isNotEmpty)
                 .isEmpty)
               Text(
                 'Nenhuma milestone definida.',
@@ -302,7 +368,9 @@ class _GoalWizardState extends State<GoalWizard> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            AppStrings.addGoalTitle,
+            widget.goal == null
+                ? AppStrings.addGoalTitle
+                : AppStrings.editGoalTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -355,5 +423,43 @@ class _GoalWizardState extends State<GoalWizard> {
         ],
       ),
     );
+  }
+}
+
+class _MilestoneDraft {
+  _MilestoneDraft({
+    required this.id,
+    required this.controller,
+    required this.isCompleted,
+    required this.completedAt,
+  });
+
+  final String id;
+  final TextEditingController controller;
+  final bool isCompleted;
+  final DateTime? completedAt;
+
+  factory _MilestoneDraft.create() {
+    return _MilestoneDraft(
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      controller: TextEditingController(),
+      isCompleted: false,
+      completedAt: null,
+    );
+  }
+
+  factory _MilestoneDraft.fromMilestone(Milestone milestone) {
+    return _MilestoneDraft(
+      id: milestone.id.isEmpty
+          ? DateTime.now().microsecondsSinceEpoch.toString()
+          : milestone.id,
+      controller: TextEditingController(text: milestone.text),
+      isCompleted: milestone.isCompleted,
+      completedAt: milestone.completedAt,
+    );
+  }
+
+  void dispose() {
+    controller.dispose();
   }
 }

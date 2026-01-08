@@ -50,8 +50,18 @@ void main() {
       userId: 'user-1',
       title: 'Meta',
       reason: 'Motivo',
-      deadline: DateTime(2030, 1, 1),
-      milestones: const [Milestone(title: 'M1', isCompleted: false)],
+      createdAt: DateTime(2024, 1, 1),
+      targetDate: DateTime(2030, 1, 1),
+      status: GoalStatus.active,
+      milestones: const [
+        Milestone(
+          id: 'milestone-1',
+          goalId: 'goal-1',
+          text: 'M1',
+          order: 0,
+          isCompleted: false,
+        ),
+      ],
       specific: 'Específica',
       measurable: 'Mensurável',
       achievable: 'Alcançável',
@@ -65,6 +75,8 @@ void main() {
     expect(restored.specific, goal.specific);
     expect(restored.timeBound?.year, 2030);
     expect(restored.categoryId, goal.categoryId);
+    expect(restored.status, GoalStatus.active);
+    expect(restored.createdAt.year, 2024);
   });
 
   test('routine step serializes', () {

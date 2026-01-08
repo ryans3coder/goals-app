@@ -330,8 +330,12 @@ class DataProvider extends ChangeNotifier {
 
   Milestone _cloneMilestone(Milestone milestone) {
     return Milestone(
-      title: milestone.title,
+      id: milestone.id,
+      goalId: milestone.goalId,
+      text: milestone.text,
+      order: milestone.order,
       isCompleted: milestone.isCompleted,
+      completedAt: milestone.completedAt,
     );
   }
 
@@ -341,7 +345,9 @@ class DataProvider extends ChangeNotifier {
       userId: goal.userId,
       title: goal.title,
       reason: goal.reason,
-      deadline: goal.deadline,
+      createdAt: goal.createdAt,
+      targetDate: goal.targetDate,
+      status: goal.status,
       milestones: goal.milestones.map(_cloneMilestone).toList(),
       specific: goal.specific,
       measurable: goal.measurable,
@@ -615,13 +621,21 @@ class DataProvider extends ChangeNotifier {
   Future<void> addGoal(Goal goal) async {
     await _ensureLoaded();
     final goalId = goal.id.isEmpty ? _generateId() : goal.id;
+    final normalizedMilestones =
+        _normalizeMilestones(goalId, goal.milestones);
+    final status = _deriveGoalStatus(
+      goal.status,
+      normalizedMilestones,
+    );
     final normalizedGoal = Goal(
       id: goalId,
       userId: goal.userId.isEmpty ? 'local' : goal.userId,
       title: goal.title,
       reason: goal.reason,
-      deadline: goal.deadline,
-      milestones: goal.milestones.map(_cloneMilestone).toList(),
+      createdAt: goal.createdAt,
+      targetDate: goal.targetDate,
+      status: status,
+      milestones: normalizedMilestones.map(_cloneMilestone).toList(),
       specific: goal.specific,
       measurable: goal.measurable,
       achievable: goal.achievable,
@@ -662,13 +676,21 @@ class DataProvider extends ChangeNotifier {
     }
 
     final currentGoal = _goals[index];
+    final normalizedMilestones =
+        _normalizeMilestones(currentGoal.id, goal.milestones);
+    final status = _deriveGoalStatus(
+      currentGoal.status,
+      normalizedMilestones,
+    );
     final updatedGoal = Goal(
       id: currentGoal.id,
       userId: currentGoal.userId,
       title: currentGoal.title,
       reason: currentGoal.reason,
-      deadline: currentGoal.deadline,
-      milestones: goal.milestones.map(_cloneMilestone).toList(),
+      createdAt: currentGoal.createdAt,
+      targetDate: currentGoal.targetDate,
+      status: status,
+      milestones: normalizedMilestones.map(_cloneMilestone).toList(),
       specific: currentGoal.specific,
       measurable: currentGoal.measurable,
       achievable: currentGoal.achievable,
@@ -682,6 +704,39 @@ class DataProvider extends ChangeNotifier {
       persist: () => _goalUseCases.upsert(updatedGoal),
     );
     await _scheduleRemoteSync();
+  }
+
+  List<Milestone> _normalizeMilestones(
+    String goalId,
+    List<Milestone> milestones,
+  ) {
+    var order = 0;
+    return milestones.map((milestone) {
+      final normalized = Milestone(
+        id: milestone.id.isEmpty ? _generateId() : milestone.id,
+        goalId: goalId,
+        text: milestone.text.trim(),
+        order: order,
+        isCompleted: milestone.isCompleted,
+        completedAt: milestone.completedAt,
+      );
+      order += 1;
+      return normalized;
+    }).toList();
+  }
+
+  GoalStatus _deriveGoalStatus(
+    GoalStatus current,
+    List<Milestone> milestones,
+  ) {
+    if (milestones.isEmpty) {
+      return GoalStatus.active;
+    }
+    final completed = milestones.every((milestone) => milestone.isCompleted);
+    if (completed) {
+      return GoalStatus.completed;
+    }
+    return current == GoalStatus.completed ? GoalStatus.active : current;
   }
 
   List<HabitCategory> get categories =>
