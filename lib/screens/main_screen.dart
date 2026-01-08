@@ -212,6 +212,51 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  Widget _buildLoadingSliver() {
+    return const SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  Widget _buildEmptySliver({
+    required IconData icon,
+    required String title,
+    required String message,
+    required String actionLabel,
+    required VoidCallback onAction,
+  }) {
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: _buildEmptyState(
+        icon: icon,
+        title: title,
+        message: message,
+        actionLabel: actionLabel,
+        onAction: onAction,
+      ),
+    );
+  }
+
+  Widget _buildSeparatedSliverList({
+    required int itemCount,
+    required IndexedWidgetBuilder itemBuilder,
+    double spacing = AppSpacing.lg,
+  }) {
+    final totalItems = itemCount == 0 ? 0 : (itemCount * 2) - 1;
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          if (index.isOdd) {
+            return SizedBox(height: spacing);
+          }
+          return itemBuilder(context, index ~/ 2);
+        },
+        childCount: totalItems,
+      ),
+    );
+  }
+
   Widget _buildHabitsTab() {
     final categories = context.watch<DataProvider>().categories;
     final categoryLookup = {
@@ -224,11 +269,11 @@ class _MainScreenState extends State<MainScreen> {
         final theme = Theme.of(context);
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildLoadingSliver();
         }
 
         if (snapshot.hasError) {
-          return _buildEmptyState(
+          return _buildEmptySliver(
             icon: Icons.self_improvement,
             title: AppStrings.habitLoadErrorTitle,
             message: AppStrings.habitLoadErrorMessage,
@@ -238,7 +283,7 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         if (habits.isEmpty) {
-          return _buildEmptyState(
+          return _buildEmptySliver(
             icon: Icons.self_improvement,
             title: AppStrings.habitEmptyTitle,
             message: AppStrings.habitEmptyMessage,
@@ -247,126 +292,127 @@ class _MainScreenState extends State<MainScreen> {
           );
         }
 
-        return ListView.separated(
+        return SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.page,
             0,
             AppSpacing.page,
             AppSpacing.page,
           ),
-          itemCount: habits.length,
-          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
-          itemBuilder: (context, index) {
-            final habit = habits[index];
-            final isCompleted = habit.isCompletedToday;
-            final emoji = habit.emoji.isNotEmpty
-                ? habit.emoji
-                : HabitFormOptions.fallbackEmoji;
-            final categoryId = habit.categoryId;
-            final category = categoryId != null
-                ? categoryLookup[categoryId]
-                : null;
-            final categoryLabel = category != null
-                ? '${category.emoji} ${category.name}'
-                : (categoryId != null && categoryId.isNotEmpty
-                    ? categoryId
-                    : AppStrings.habitNoCategory);
+          sliver: _buildSeparatedSliverList(
+            itemCount: habits.length,
+            itemBuilder: (context, index) {
+              final habit = habits[index];
+              final isCompleted = habit.isCompletedToday;
+              final emoji = habit.emoji.isNotEmpty
+                  ? habit.emoji
+                  : HabitFormOptions.fallbackEmoji;
+              final categoryId = habit.categoryId;
+              final category = categoryId != null
+                  ? categoryLookup[categoryId]
+                  : null;
+              final categoryLabel = category != null
+                  ? '${category.emoji} ${category.name}'
+                  : (categoryId != null && categoryId.isNotEmpty
+                      ? categoryId
+                      : AppStrings.habitNoCategory);
 
-            return AppCard(
-              onTap: () => _openHabitForm(habit: habit),
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 250),
-                opacity: isCompleted ? 0.7 : 1,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Text(
-                            emoji,
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  habit.title,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.xs),
-                                Text(
-                                  categoryLabel,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textBody,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.lg),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      transitionBuilder: (child, animation) {
-                        return ScaleTransition(
-                          scale: animation,
-                          child: child,
-                        );
-                      },
-                      child: isCompleted
-                          ? Container(
-                              key: const ValueKey('done'),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.lg,
-                                vertical: AppSpacing.sm,
+              return AppCard(
+                onTap: () => _openHabitForm(habit: habit),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 250),
+                  opacity: isCompleted ? 0.7 : 1,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Text(
+                              emoji,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
                               ),
-                              decoration: BoxDecoration(
-                                color:
-                                    theme.colorScheme.secondary.withValues(
-                                      alpha: 0.18,
-                                    ),
-                                borderRadius:
-                                    BorderRadius.circular(AppRadii.input),
-                              ),
-                              child: Row(
+                            ),
+                            const SizedBox(width: AppSpacing.lg),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(
-                                    Icons.check_circle,
-                                    size: AppSizes.iconSmall,
+                                  Text(
+                                    habit.title,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                  const SizedBox(width: AppSpacing.sm),
-                                  Text(AppStrings.completed),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(
+                                    categoryLabel,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: AppColors.textBody,
+                                    ),
+                                  ),
                                 ],
                               ),
-                            )
-                          : AppPrimaryButton(
-                              key: const ValueKey('check'),
-                              onPressed: () async {
-                                await context
-                                    .read<DataProvider>()
-                                    .updateHabitCompletion(
-                                      habit: habit,
-                                      isCompletedToday: true,
-                                    );
-                              },
-                              label: AppStrings.complete,
-                              isFullWidth: false,
                             ),
-                    ),
-                  ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.lg),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        transitionBuilder: (child, animation) {
+                          return ScaleTransition(
+                            scale: animation,
+                            child: child,
+                          );
+                        },
+                        child: isCompleted
+                            ? Container(
+                                key: const ValueKey('done'),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.lg,
+                                  vertical: AppSpacing.sm,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      theme.colorScheme.secondary.withValues(
+                                        alpha: 0.18,
+                                      ),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadii.input),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle,
+                                      size: AppSizes.iconSmall,
+                                    ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Text(AppStrings.completed),
+                                  ],
+                                ),
+                              )
+                            : AppPrimaryButton(
+                                key: const ValueKey('check'),
+                                onPressed: () async {
+                                  await context
+                                      .read<DataProvider>()
+                                      .updateHabitCompletion(
+                                        habit: habit,
+                                        isCompletedToday: true,
+                                      );
+                                },
+                                label: AppStrings.complete,
+                                isFullWidth: false,
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         );
       },
     );
@@ -380,11 +426,11 @@ class _MainScreenState extends State<MainScreen> {
         final theme = Theme.of(context);
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildLoadingSliver();
         }
 
         if (routines.isEmpty) {
-          return _buildEmptyState(
+          return _buildEmptySliver(
             icon: Icons.nights_stay_outlined,
             title: AppStrings.routineEmptyTitle,
             message: AppStrings.routineEmptyMessage,
@@ -395,47 +441,48 @@ class _MainScreenState extends State<MainScreen> {
           );
         }
 
-        return ListView.separated(
+        return SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.page,
             0,
             AppSpacing.page,
             AppSpacing.page,
           ),
-          itemCount: routines.length,
-          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
-          itemBuilder: (context, index) {
-            final routine = routines[index];
-            return AppCard(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => RoutineDetailScreen(routine: routine),
-                  ),
-                );
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    routine.title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+          sliver: _buildSeparatedSliverList(
+            itemCount: routines.length,
+            itemBuilder: (context, index) {
+              final routine = routines[index];
+              return AppCard(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => RoutineDetailScreen(routine: routine),
                     ),
-                  ),
-                  if (routine.triggerTime.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.sm),
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      routine.triggerTime,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.textBody,
+                      routine.title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                    if (routine.triggerTime.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        routine.triggerTime,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textBody,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-              ),
-            );
-          },
+                ),
+              );
+            },
+          ),
         );
       },
     );
@@ -449,11 +496,11 @@ class _MainScreenState extends State<MainScreen> {
         final theme = Theme.of(context);
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildLoadingSliver();
         }
 
         if (goals.isEmpty) {
-          return _buildEmptyState(
+          return _buildEmptySliver(
             icon: Icons.emoji_events_outlined,
             title: AppStrings.goalEmptyTitle,
             message: AppStrings.goalEmptyMessage,
@@ -462,154 +509,158 @@ class _MainScreenState extends State<MainScreen> {
           );
         }
 
-        return ListView.separated(
+        return SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.page,
             0,
             AppSpacing.page,
             AppSpacing.page,
           ),
-          itemCount: goals.length,
-          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
-          itemBuilder: (context, index) {
-            final goal = goals[index];
-            final orderedMilestones = goal.milestones.toList()
-              ..sort((a, b) => a.order.compareTo(b.order));
-            final totalMilestones = orderedMilestones.length;
-            final completedMilestones = orderedMilestones
-                .where((milestone) => milestone.isCompleted)
-                .length;
-            final progress = totalMilestones == 0
-                ? 0.0
-                : completedMilestones / totalMilestones;
-            final progressLabel = (progress * 100).round();
+          sliver: _buildSeparatedSliverList(
+            itemCount: goals.length,
+            itemBuilder: (context, index) {
+              final goal = goals[index];
+              final orderedMilestones = goal.milestones.toList()
+                ..sort((a, b) => a.order.compareTo(b.order));
+              final totalMilestones = orderedMilestones.length;
+              final completedMilestones = orderedMilestones
+                  .where((milestone) => milestone.isCompleted)
+                  .length;
+              final progress = totalMilestones == 0
+                  ? 0.0
+                  : completedMilestones / totalMilestones;
+              final progressLabel = (progress * 100).round();
 
-            return AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          goal.title,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+              return AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            goal.title,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () => _showGoalWizard(goal: goal),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      goal.reason.isEmpty
+                          ? AppStrings.goalNoReason
+                          : goal.reason,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.textBody,
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.edit_outlined),
-                        onPressed: () => _showGoalWizard(goal: goal),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    goal.reason.isEmpty ? AppStrings.goalNoReason : goal.reason,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textBody,
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppProgressBar(value: progress),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    AppStrings.goalProgressSummary(
-                      percent: progressLabel,
-                      completed: completedMilestones,
-                      total: totalMilestones,
-                    ),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textBody,
-                    ),
-                  ),
-                  if (orderedMilestones.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.md),
-                    ...orderedMilestones.asMap().entries.map(
-                      (entry) {
-                        final milestone = entry.value;
-                        return Row(
-                          children: [
-                            _MilestoneCheckbox(
-                              value: milestone.isCompleted,
-                              onChanged: (value) async {
-                                final updatedMilestones = [
-                                  for (final item in orderedMilestones)
-                                    Milestone(
-                                      id: item.id,
-                                      goalId: item.goalId,
-                                      text: item.text,
-                                      order: item.order,
-                                      isCompleted: item.isCompleted,
-                                      completedAt: item.completedAt,
-                                    ),
-                                ];
-                                final isCompleted = value ?? false;
-                                updatedMilestones[entry.key] = Milestone(
-                                  id: milestone.id,
-                                  goalId: milestone.goalId,
-                                  text: milestone.text,
-                                  order: milestone.order,
-                                  isCompleted: isCompleted,
-                                  completedAt:
-                                      isCompleted ? DateTime.now() : null,
-                                );
-                                final isGoalCompleted = updatedMilestones
-                                    .every((item) => item.isCompleted);
-                                await context
-                                    .read<DataProvider>()
-                                    .updateGoalMilestones(
-                                      goal: Goal(
-                                        id: goal.id,
-                                        userId: goal.userId,
-                                        title: goal.title,
-                                        reason: goal.reason,
-                                        createdAt: goal.createdAt,
-                                        targetDate: goal.targetDate,
-                                        status: goal.status,
-                                        milestones: updatedMilestones,
-                                        specific: goal.specific,
-                                        measurable: goal.measurable,
-                                        achievable: goal.achievable,
-                                        relevant: goal.relevant,
-                                        timeBound: goal.timeBound,
-                                        categoryId: goal.categoryId,
+                    AppProgressBar(value: progress),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      AppStrings.goalProgressSummary(
+                        percent: progressLabel,
+                        completed: completedMilestones,
+                        total: totalMilestones,
+                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.textBody,
+                      ),
+                    ),
+                    if (orderedMilestones.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      ...orderedMilestones.asMap().entries.map(
+                        (entry) {
+                          final milestone = entry.value;
+                          return Row(
+                            children: [
+                              _MilestoneCheckbox(
+                                value: milestone.isCompleted,
+                                onChanged: (value) async {
+                                  final updatedMilestones = [
+                                    for (final item in orderedMilestones)
+                                      Milestone(
+                                        id: item.id,
+                                        goalId: item.goalId,
+                                        text: item.text,
+                                        order: item.order,
+                                        isCompleted: item.isCompleted,
+                                        completedAt: item.completedAt,
                                       ),
-                                    );
-                                if (isGoalCompleted &&
-                                    goal.status != GoalStatus.completed) {
-                                  await _feedbackManager.triggerVictoryFeedback(
-                                    context
-                                        .read<DataProvider>()
-                                        .feedbackPreferences,
+                                  ];
+                                  final isCompleted = value ?? false;
+                                  updatedMilestones[entry.key] = Milestone(
+                                    id: milestone.id,
+                                    goalId: milestone.goalId,
+                                    text: milestone.text,
+                                    order: milestone.order,
+                                    isCompleted: isCompleted,
+                                    completedAt:
+                                        isCompleted ? DateTime.now() : null,
                                   );
-                                }
-                              },
-                            ),
-                            Expanded(
-                              child: Text(
-                                milestone.text,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: milestone.isCompleted
-                                      ? theme.colorScheme.onSurface
-                                          .withValues(alpha: 0.6)
-                                  : theme.colorScheme.onSurface,
-                                  decoration: milestone.isCompleted
-                                      ? TextDecoration.lineThrough
-                                      : TextDecoration.none,
+                                  final isGoalCompleted = updatedMilestones
+                                      .every((item) => item.isCompleted);
+                                  await context
+                                      .read<DataProvider>()
+                                      .updateGoalMilestones(
+                                        goal: Goal(
+                                          id: goal.id,
+                                          userId: goal.userId,
+                                          title: goal.title,
+                                          reason: goal.reason,
+                                          createdAt: goal.createdAt,
+                                          targetDate: goal.targetDate,
+                                          status: goal.status,
+                                          milestones: updatedMilestones,
+                                          specific: goal.specific,
+                                          measurable: goal.measurable,
+                                          achievable: goal.achievable,
+                                          relevant: goal.relevant,
+                                          timeBound: goal.timeBound,
+                                          categoryId: goal.categoryId,
+                                        ),
+                                      );
+                                  if (isGoalCompleted &&
+                                      goal.status != GoalStatus.completed) {
+                                    await _feedbackManager
+                                        .triggerVictoryFeedback(
+                                      context
+                                          .read<DataProvider>()
+                                          .feedbackPreferences,
+                                    );
+                                  }
+                                },
+                              ),
+                              Expanded(
+                                child: Text(
+                                  milestone.text,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: milestone.isCompleted
+                                        ? theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.6)
+                                        : theme.colorScheme.onSurface,
+                                    decoration: milestone.isCompleted
+                                        ? TextDecoration.lineThrough
+                                        : TextDecoration.none,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
                   ],
-                ],
-              ),
-            );
-          },
+                ),
+              );
+            },
+          ),
         );
       },
     );
@@ -760,16 +811,17 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
 
-    return ListView.separated(
+    return SliverPadding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.page,
         0,
         AppSpacing.page,
         AppSpacing.page,
       ),
-      itemCount: sections.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
-      itemBuilder: (context, index) => sections[index],
+      sliver: _buildSeparatedSliverList(
+        itemCount: sections.length,
+        itemBuilder: (context, index) => sections[index],
+      ),
     );
   }
 
@@ -780,22 +832,22 @@ class _MainScreenState extends State<MainScreen> {
         _currentIndex == _routinesTabIndex ||
         _currentIndex == _goalsTabIndex;
 
-    Widget body;
+    Widget bodySliver;
     switch (_currentIndex) {
       case _habitsTabIndex:
-        body = _buildHabitsTab();
+        bodySliver = _buildHabitsTab();
         break;
       case _routinesTabIndex:
-        body = _buildRoutinesTab();
+        bodySliver = _buildRoutinesTab();
         break;
       case _goalsTabIndex:
-        body = _buildGoalsTab();
+        bodySliver = _buildGoalsTab();
         break;
       case _profileTabIndex:
-        body = _buildProfileTab();
+        bodySliver = _buildProfileTab();
         break;
       default:
-        body = _buildEmptyState(
+        bodySliver = _buildEmptySliver(
           icon: activeTab.icon,
           title: activeTab.label,
           message: AppStrings.placeholderEmptyMessage,
@@ -808,25 +860,26 @@ class _MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.page,
-                AppSpacing.page,
-                AppSpacing.page,
-                AppSpacing.lg,
-              ),
-              child: Text(
-                activeTab.label,
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textTitle,
-                    ),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.page,
+                  AppSpacing.page,
+                  AppSpacing.page,
+                  AppSpacing.lg,
+                ),
+                child: Text(
+                  activeTab.label,
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textTitle,
+                      ),
+                ),
               ),
             ),
-            Expanded(child: body),
+            bodySliver,
           ],
         ),
       ),
